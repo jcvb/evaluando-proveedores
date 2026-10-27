@@ -1,0 +1,208 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  directUrl  = env("DIRECT_URL")
+  extensions = [pg_trgm]
+}
+
+enum UserRole {
+  CLIENT
+  PROVIDER
+  ADMIN
+}
+
+enum VerdictType {
+  BUENO
+  MALO
+  REGULAR
+}
+
+enum ReviewStatus {
+  PUBLISHED
+  PROVIDER_REPLIED
+  RESOLVED_AFTER_ISSUE
+  UNDER_MODERATION
+}
+
+enum MediaType {
+  DEFECT_EVIDENCE
+  COMPLETED_WORK
+  CONTRACT_RECEIPT
+  PROVIDER_REPLY_PROOF
+}
+
+enum ClaimStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id         String   @id @default(uuid())
+  authUserId String?  @unique
+  email      String   @unique
+  name       String
+  phone      String?  @unique
+  role       UserRole @default(CLIENT)
+  isVerified Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  reviews        Review[]
+  claimedProfile ProviderProfile?
+  replies        ProviderReply[]
+  helpfulVotes   HelpfulVote[]
+  claims         ProviderClaim[]
+}
+
+model ServiceCategory {
+  id        String            @id @default(uuid())
+  name      String            @unique
+  slug      String            @unique
+  icon      String?
+  providers ProviderProfile[]
+  reviews   Review[]
+}
+
+model ProviderProfile {
+  id             String  @id @default(uuid())
+  businessName   String
+  contactName    String?
+  phonePrimary   String
+  phoneSecondary String?
+  socialMediaUrl String?
+
+  claimedByUserId String?  @unique
+  claimedByUser   User?    @relation(fields: [claimedByUserId], references: [id])
+  isClaimed       Boolean  @default(false)
+
+  primaryState String
+  primaryCity  String
+
+  totalReviews     Int   @default(0)
+  goodReviewsCount Int   @default(0)
+  badReviewsCount  Int   @default(0)
+  averageScore     Float @default(0)
+
+  categories ServiceCategory[]
+  reviews    Review[]
+  claims     ProviderClaim[]
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  @@index([phonePrimary])
+  @@index([businessName])
+  @@index([primaryState, primaryCity])
+}
+
+model Review {
+  id         String          @id @default(uuid())
+  authorId   String
+  author     User            @relation(fields: [authorId], references: [id])
+  providerId String
+  provider   ProviderProfile @relation(fields: [providerId], references: [id])
+  categoryId String
+  category   ServiceCategory @relation(fields: [categoryId], references: [id])
+
+  verdict     VerdictType
+  rating      Int
+  title       String
+  description String      @db.Text
+  tags        String[]
+
+  serviceDate        DateTime
+  costRange          String?
+  gaveAdvancePayment Boolean  @default(false)
+  advancePercentage  Int?
+  hadWrittenContract Boolean  @default(false)
+
+  postalCode         String  @db.VarChar(5)
+  state              String
+  cityOrMunicipality String
+  townOrLocality     String?
+  colonia            String
+  fraccionamiento    String?
+  calle              String?
+
+  status       ReviewStatus @default(PUBLISHED)
+  helpfulCount Int          @default(0)
+
+  media         ReviewMedia[]
+  providerReply ProviderReply?
+  helpfulVotes  HelpfulVote[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([state, cityOrMunicipality, colonia])
+  @@index([fraccionamiento])
+  @@index([verdict, categoryId])
+  @@index([providerId])
+}
+
+model ReviewMedia {
+  id        String    @id @default(uuid())
+  reviewId  String
+  review    Review    @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  url       String
+  mediaType MediaType
+  caption   String?
+  createdAt DateTime  @default(now())
+}
+
+model ProviderReply {
+  id             String   @id @default(uuid())
+  reviewId       String   @unique
+  review         Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  providerUserId String
+  providerUser   User     @relation(fields: [providerUserId], references: [id])
+  content        String   @db.Text
+  mediaUrls      String[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model HelpfulVote {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reviewId  String
+  review    Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, reviewId])
+}
+
+model ProviderClaim {
+  id         String           @id @default(uuid())
+  userId     String
+  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  providerId String
+  provider   ProviderProfile @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  phone      String
+  status     ClaimStatus      @default(PENDING)
+  note       String?
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  @@index([status])
+  @@index([providerId, userId])
+}
+
+model SepomexCatalog {
+  id               Int     @id @default(autoincrement())
+  codigoPostal     String  @db.VarChar(5)
+  asentamiento     String
+  tipoAsentamiento String
+  municipio        String
+  estado           String
+  ciudad           String?
+
+  @@index([codigoPostal])
+  @@index([estado, municipio])
+  @@index([asentamiento])
+}

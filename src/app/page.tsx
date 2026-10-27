@@ -1,103 +1,90 @@
-import Image from "next/image";
+import { Camera, Reply, SearchX, ShieldCheck, TriangleAlert } from "lucide-react";
+import { ProviderCard } from "@/components/provider-card";
+import { SearchForm } from "@/components/search-form";
+import { SERVICE_CATEGORIES } from "@/lib/constants";
+import { databaseConfigured } from "@/lib/prisma";
+import { listCategories, searchProviders, type SearchFilters } from "@/server/queries";
 
-export default function Home() {
+export const dynamic = "force-dynamic";
+
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | undefined>>;
+}) {
+  const params = await searchParams;
+  const filters: SearchFilters = {
+    q: params.q,
+    oficio: params.oficio,
+    estado: params.estado,
+    municipio: params.municipio,
+    colonia: params.colonia,
+    fraccionamiento: params.fraccionamiento,
+    veredicto: params.veredicto === "BUENO" || params.veredicto === "MALO" || params.veredicto === "REGULAR" ? params.veredicto : "",
+  };
+
+  let categories: { slug: string; name: string }[] = SERVICE_CATEGORIES.map(({ slug, name }) => ({ slug, name }));
+  let providers: Awaited<ReturnType<typeof searchProviders>> = [];
+  let notice: string | null = null;
+
+  if (!databaseConfigured()) {
+    notice = "La base de datos no está conectada. Cuando esté lista, aquí aparecen los negocios.";
+  } else {
+    try {
+      const stored = await listCategories();
+      if (stored.length > 0) categories = stored;
+      providers = await searchProviders(filters);
+    } catch (error) {
+      console.error(error);
+      notice = "No se pudo consultar la base de datos. Revisa que esté encendida.";
+    }
+  }
+
+  const hasFilters = Boolean(filters.q || filters.oficio || filters.estado || filters.municipio || filters.colonia || filters.fraccionamiento || filters.veredicto);
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
+    <div className="mx-auto grid max-w-5xl gap-6 px-4 py-8">
+      <section className="grid gap-2">
+        <h1 className="font-heading text-2xl md:text-3xl">Busca un maestro antes de contratarlo</h1>
+        <p className="max-w-2xl text-muted-foreground">
+          Aquí otras personas cuentan cómo les fue, con fotos. El negocio puede responder. No puede borrar lo que escribieron.
+        </p>
+        <ul className="mt-1 flex flex-wrap gap-x-5 gap-y-1.5 text-sm [&_li]:flex [&_li]:items-center [&_li]:gap-1.5 [&_svg]:size-4 [&_svg]:text-primary">
+          <li>
+            <Camera aria-hidden />
+            Opiniones con fotos
           </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
+          <li>
+            <Reply aria-hidden />
+            El negocio puede responder
           </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+          <li>
+            <ShieldCheck aria-hidden />
+            Nadie borra lo escrito
+          </li>
+        </ul>
+      </section>
+      <SearchForm categories={categories} defaults={filters} />
+      {notice ? (
+        <p className="flex items-start gap-2 rounded-xl bg-amber-100 px-4 py-3 text-amber-950">
+          <TriangleAlert className="mt-0.5 size-5 shrink-0" aria-hidden />
+          {notice}
+        </p>
+      ) : null}
+      {providers.length === 0 && !notice ? (
+        <p className="flex items-start gap-2 rounded-xl bg-muted px-4 py-3">
+          <SearchX className="mt-0.5 size-5 shrink-0 text-muted-foreground" aria-hidden />
+          {hasFilters
+            ? "No encontramos a nadie con esos datos. Revisa el nombre o el teléfono, o cuenta tú la primera experiencia."
+            : "Todavía no hay opiniones. Si ya contrataste a alguien, puedes ser la primera persona en contarlo."}
+        </p>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {providers.map((provider) => (
+            <ProviderCard key={provider.id} provider={provider} />
+          ))}
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      )}
     </div>
   );
 }
