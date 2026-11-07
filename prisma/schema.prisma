@@ -83,6 +83,10 @@ model ProviderProfile {
   primaryState String
   primaryCity  String
 
+  googlePlaceId          String? @unique
+  googleMapsUrl          String?
+  googleFormattedAddress String?
+
   totalReviews     Int   @default(0)
   goodReviewsCount Int   @default(0)
   badReviewsCount  Int   @default(0)

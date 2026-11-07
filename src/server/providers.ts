@@ -47,6 +47,32 @@ export async function resolveProvider(tx: Tx, input: ReviewInput, categoryId: st
     return samePhone;
   }
 
+  const googlePlaceId = draft.googlePlaceId?.trim() || null;
+  if (googlePlaceId) {
+    const samePlace = await tx.providerProfile.findUnique({
+      where: { googlePlaceId },
+      include: { categories: { select: { id: true } } },
+    });
+    if (samePlace) {
+      const needsCategory = !samePlace.categories.some((category) => category.id === categoryId);
+      if (
+        needsCategory ||
+        draft.googleMapsUrl ||
+        draft.googleFormattedAddress
+      ) {
+        await tx.providerProfile.update({
+          where: { id: samePlace.id },
+          data: {
+            ...(needsCategory ? { categories: { connect: { id: categoryId } } } : {}),
+            googleMapsUrl: draft.googleMapsUrl?.trim() || samePlace.googleMapsUrl,
+            googleFormattedAddress: draft.googleFormattedAddress?.trim() || samePlace.googleFormattedAddress,
+          },
+        });
+      }
+      return samePlace;
+    }
+  }
+
   return tx.providerProfile.create({
     data: {
       businessName: draft.businessName.trim(),
@@ -56,6 +82,9 @@ export async function resolveProvider(tx: Tx, input: ReviewInput, categoryId: st
       socialMediaUrl: draft.socialMediaUrl || null,
       primaryState: state,
       primaryCity: draft.primaryCity.trim(),
+      googlePlaceId,
+      googleMapsUrl: draft.googleMapsUrl?.trim() || null,
+      googleFormattedAddress: draft.googleFormattedAddress?.trim() || null,
       categories: { connect: { id: categoryId } },
     },
   });

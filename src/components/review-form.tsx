@@ -41,6 +41,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { AddressFields, emptyAddress, type AddressValue } from "@/components/address-fields";
+import { PlaceMatchPanel, type PlaceMatchSelection } from "@/components/place-match-panel";
 import { SectionHeading } from "@/components/section-heading";
 import { suggestProvidersAction } from "@/server/actions/discovery";
 import { createReview } from "@/server/actions/reviews";
@@ -98,6 +99,12 @@ export function ReviewForm({
   const [gaveAdvance, setGaveAdvance] = useState(false);
   const [address, setAddress] = useState<AddressValue>(emptyAddress());
   const [photos, setPhotos] = useState<LocalPhoto[]>([]);
+  const [businessName, setBusinessName] = useState("");
+  const [phonePrimary, setPhonePrimary] = useState("");
+  const [googlePlaceId, setGooglePlaceId] = useState("");
+  const [googleMapsUrl, setGoogleMapsUrl] = useState("");
+  const [googleFormattedAddress, setGoogleFormattedAddress] = useState("");
+  const [matchedLabel, setMatchedLabel] = useState("");
 
   const tagOptions = useMemo(
     () =>
@@ -130,6 +137,44 @@ export function ReviewForm({
     setPhotos((current) => current.map((photo) => ({ ...photo, mediaType: defaultMedia(next) })));
   }
 
+  const matchName = mode === "existing" ? query : businessName;
+
+  function applyPlaceMatch(selection: PlaceMatchSelection) {
+    if (selection.kind === "local") {
+      const item = selection.match;
+      setMode("existing");
+      setProviderId(item.id);
+      setProviderLabel(`${item.name} · ${item.phone}`);
+      setQuery(item.name);
+      setSuggestions([]);
+      setMatchedLabel(`Elegido del Buró: ${item.name}`);
+      setGooglePlaceId("");
+      setGoogleMapsUrl("");
+      setGoogleFormattedAddress("");
+      toast.success("Usamos el perfil que ya estaba en el Buró");
+      return;
+    }
+
+    const item = selection.match;
+    setMode("new");
+    setProviderId("");
+    setProviderLabel("");
+    setBusinessName(item.name);
+    if (item.phone) setPhonePrimary(item.phone);
+    setGooglePlaceId(item.placeId);
+    setGoogleMapsUrl(item.mapsUrl);
+    setGoogleFormattedAddress(item.formattedAddress);
+    setMatchedLabel(`Vinculado a Google Maps: ${item.name}`);
+    if (item.state || item.city) {
+      setAddress((current) => ({
+        ...current,
+        state: item.state || current.state,
+        municipio: item.city || current.municipio,
+      }));
+    }
+    toast.success("Se llenaron los datos con la ficha de Google Maps");
+  }
+
   async function onFiles(list: FileList | null) {
     if (!list) return;
     const room = MAX_REVIEW_PHOTOS - photos.length;
@@ -153,13 +198,16 @@ export function ReviewForm({
     const newProvider =
       mode === "new"
         ? {
-            businessName: String(form.get("businessName") ?? ""),
+            businessName: businessName || String(form.get("businessName") ?? ""),
             contactName: String(form.get("contactName") ?? ""),
-            phonePrimary: String(form.get("phonePrimary") ?? ""),
+            phonePrimary: phonePrimary || String(form.get("phonePrimary") ?? ""),
             phoneSecondary: String(form.get("phoneSecondary") ?? ""),
             socialMediaUrl: String(form.get("socialMediaUrl") ?? ""),
             primaryState: String(form.get("primaryState") ?? "") || address.state,
             primaryCity: String(form.get("primaryCity") ?? "") || address.municipio,
+            googlePlaceId: googlePlaceId || undefined,
+            googleMapsUrl: googleMapsUrl || undefined,
+            googleFormattedAddress: googleFormattedAddress || undefined,
           }
         : undefined;
 
@@ -303,7 +351,19 @@ export function ReviewForm({
           <div className="grid gap-3 md:grid-cols-2">
             <div>
               <Label htmlFor="businessName">Nombre con el que se anuncia</Label>
-              <Input id="businessName" name="businessName" className={fieldClass} />
+              <Input
+                id="businessName"
+                name="businessName"
+                value={businessName}
+                onChange={(event) => {
+                  setBusinessName(event.target.value);
+                  setGooglePlaceId("");
+                  setGoogleMapsUrl("");
+                  setGoogleFormattedAddress("");
+                  setMatchedLabel("");
+                }}
+                className={fieldClass}
+              />
               {errors["newProvider.businessName"] ? (
                 <p className="mt-1 text-sm text-destructive">{errors["newProvider.businessName"]}</p>
               ) : null}
@@ -314,7 +374,15 @@ export function ReviewForm({
             </div>
             <div>
               <Label htmlFor="phonePrimary">Celular de 10 dígitos</Label>
-              <Input id="phonePrimary" name="phonePrimary" inputMode="tel" className={fieldClass} placeholder="10 dígitos" />
+              <Input
+                id="phonePrimary"
+                name="phonePrimary"
+                inputMode="tel"
+                value={phonePrimary}
+                onChange={(event) => setPhonePrimary(event.target.value)}
+                className={fieldClass}
+                placeholder="10 dígitos"
+              />
               {errors["newProvider.phonePrimary"] ? (
                 <p className="mt-1 text-sm text-destructive">{errors["newProvider.phonePrimary"]}</p>
               ) : null}
@@ -342,6 +410,20 @@ export function ReviewForm({
               <Label htmlFor="primaryCity">Ciudad o municipio</Label>
               <Input id="primaryCity" name="primaryCity" defaultValue={address.municipio} key={address.municipio} className={fieldClass} />
             </div>
+            {googlePlaceId ? (
+              <p className="md:col-span-2 flex flex-wrap items-center gap-2 text-sm text-primary">
+                <CircleCheck className="size-4" aria-hidden />
+                {matchedLabel || "Vinculado a Google Maps"}
+                {googleMapsUrl ? (
+                  <a href={googleMapsUrl} target="_blank" rel="noreferrer" className="underline">
+                    Ver en el mapa
+                  </a>
+                ) : null}
+              </p>
+            ) : null}
+            <input type="hidden" name="googlePlaceId" value={googlePlaceId} />
+            <input type="hidden" name="googleMapsUrl" value={googleMapsUrl} />
+            <input type="hidden" name="googleFormattedAddress" value={googleFormattedAddress} />
           </div>
         )}
       </section>
@@ -364,6 +446,24 @@ export function ReviewForm({
             calle: errors.calle,
           }}
         />
+        <PlaceMatchPanel
+          name={matchName}
+          address={{
+            calle: address.calle,
+            colonia: address.colonia,
+            fraccionamiento: address.fraccionamiento,
+            municipio: address.municipio,
+            estado: address.state,
+            postalCode: address.postalCode,
+          }}
+          onSelect={applyPlaceMatch}
+        />
+        {matchedLabel && mode === "existing" ? (
+          <p className="flex items-center gap-1.5 text-sm text-primary">
+            <CircleCheck className="size-4" aria-hidden />
+            {matchedLabel}
+          </p>
+        ) : null}
       </section>
 
       <section className="grid gap-4">

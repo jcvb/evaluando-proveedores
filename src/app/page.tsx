@@ -64,7 +64,7 @@ export default async function HomePage({
           </li>
         </ul>
       </section>
-      <SearchForm categories={categories} defaults={filters} />
+      <SearchForm key={JSON.stringify(filters)} categories={categories} defaults={filters} />
       {notice ? (
         <p className="flex items-start gap-2 rounded-xl bg-amber-100 px-4 py-3 text-amber-950">
           <TriangleAlert className="mt-0.5 size-5 shrink-0" aria-hidden />

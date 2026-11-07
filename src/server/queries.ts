@@ -68,6 +68,9 @@ export async function searchProviders(filters: SearchFilters) {
                 ...(similarIds ? [{ id: { in: similarIds.length ? similarIds : ["__none__"] } }] : []),
                 { businessName: { contains: q, mode: "insensitive" as const } },
                 { contactName: { contains: q, mode: "insensitive" as const } },
+                ...(!phone && q.length >= 3
+                  ? [{ categories: { some: { name: { contains: q.slice(0, Math.max(3, q.length - 2)), mode: "insensitive" as const } } } }]
+                  : []),
               ],
             }
           : {},

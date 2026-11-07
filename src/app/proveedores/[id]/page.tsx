@@ -77,6 +77,19 @@ export default async function ProviderPage({ params }: { params: Promise<{ id: s
                 </a>
               </li>
             ) : null}
+            {provider.googleMapsUrl ? (
+              <li className="flex items-start gap-2">
+                <MapPin aria-hidden />
+                <span>
+                  <a href={provider.googleMapsUrl} className="underline" target="_blank" rel="noreferrer">
+                    Ver en Google Maps
+                  </a>
+                  {provider.googleFormattedAddress ? (
+                    <span className="block text-sm text-muted-foreground">{provider.googleFormattedAddress}</span>
+                  ) : null}
+                </span>
+              </li>
+            ) : null}
             {provider.isClaimed ? (
               <li className="flex items-center gap-2 text-sm text-muted-foreground">
                 <BadgeCheck className="text-primary!" aria-hidden />

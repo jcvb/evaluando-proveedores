@@ -6,10 +6,13 @@
     "seed": "node prisma/seed.mjs"
   },
   "scripts": {
+    "up": "node scripts/dev-up.mjs",
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
     "lint": "eslint",
+    "db:up": "docker compose up -d postgres",
+    "db:down": "docker compose stop postgres",
     "db:generate": "prisma generate",
     "db:migrate": "node scripts/with-env.mjs development -- npx prisma migrate dev",
     "db:migrate:prod": "node scripts/with-env.mjs production -- npx prisma migrate deploy",

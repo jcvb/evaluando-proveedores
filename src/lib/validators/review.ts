@@ -44,6 +44,9 @@ export const newProviderSchema = z.object({
   socialMediaUrl: z.union([z.literal(""), z.string().trim().url("El enlace no es válido")]).optional(),
   primaryState: z.string().trim().min(2),
   primaryCity: z.string().trim().min(2),
+  googlePlaceId: z.string().trim().max(256).optional().or(z.literal("")),
+  googleMapsUrl: z.union([z.literal(""), z.string().trim().url()]).optional(),
+  googleFormattedAddress: z.string().trim().max(320).optional().or(z.literal("")),
 });
 
 export const reviewSchema = z

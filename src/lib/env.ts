@@ -20,3 +20,7 @@ export function isAdminEmail(email: string) {
 export function siteOrigin() {
   return process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 }
+
+export function googleMapsConfigured() {
+  return Boolean(process.env.GOOGLE_MAPS_API_KEY?.trim());
+}
