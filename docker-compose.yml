@@ -1,7 +1,9 @@
+name: proveedores
+
 services:
-  postgres:
+  postgres-dev:
     image: postgres:16
-    container_name: proveedores-pg
+    container_name: proveedores-pg-dev
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -9,8 +11,30 @@ services:
     ports:
       - "54329:5432"
     volumes:
-      - proveedores_pg:/var/lib/postgresql/data
-      - ./docker/init-databases.sql:/docker-entrypoint-initdb.d/02-databases.sql
+      - pg_dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d proveedores_dev"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  postgres-prod:
+    image: postgres:16
+    container_name: proveedores-pg-prod
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: proveedores_prod
+    ports:
+      - "54330:5432"
+    volumes:
+      - pg_prod:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d proveedores_prod"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
 
 volumes:
-  proveedores_pg:
+  pg_dev:
+  pg_prod:

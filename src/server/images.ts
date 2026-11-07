@@ -30,6 +30,12 @@ export async function storeEvidence(objectPath: string, jpeg: Buffer) {
     return admin.storage.from(EVIDENCE_BUCKET).getPublicUrl(objectPath).data.publicUrl;
   }
 
+  if (process.env.APP_ENV === "production" || process.env.NODE_ENV === "production") {
+    throw new Error(
+      "En producción las fotos van a Supabase Storage. Configura NEXT_PUBLIC_SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY, y crea el bucket público «evidencias».",
+    );
+  }
+
   const relative = path.posix.join("evidencias", objectPath);
   const absolute = path.join(process.cwd(), "public", relative);
   await mkdir(path.dirname(absolute), { recursive: true });
