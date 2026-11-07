@@ -107,6 +107,20 @@ npm run check:deploy
 3. Publica una opinión con foto (debe subir a Storage `evidencias`).
 4. Busca el proveedor en la home.
 
+## 5. SEO y agentes de IA
+
+Con `NEXT_PUBLIC_SITE_URL` correcto quedan activos:
+
+- `/sitemap.xml` — Google / Bing
+- `/robots.txt` — crawlers web + GPTBot, OAI-SearchBot, ClaudeBot, etc.
+- `/llms.txt` y `/llms-full.txt` — mapa para agentes
+- `/contexto.md` — contexto del sitio en Markdown
+- `/feed.xml` — opiniones recientes
+- `/proveedores/{id}/md` y `/oficios/{slug}/md` — fichas limpias para IA
+- Open Graph + JSON-LD (Organization, WebSite, LocalBusiness, Review)
+
+Opcional en Vercel: `GOOGLE_SITE_VERIFICATION` y `BING_SITE_VERIFICATION`. Luego envía el sitemap en [Google Search Console](https://search.google.com/search-console).
+
 ## Límites del plan free (importante)
 
 - **Supabase Free**: ~500 MB de base, ~1 GB Storage; el proyecto puede **pausarse** si no hay actividad ~7 días (se reactiva al entrar al dashboard).

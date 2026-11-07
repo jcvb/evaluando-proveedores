@@ -1,12 +1,20 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ClipboardList, Inbox, PenLine, Store, Wrench } from "lucide-react";
+import { ClipboardList, Inbox, PenLine, ShieldCheck, Store, Wrench } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { ReviewControls } from "@/components/review-controls";
 import { VerdictPill } from "@/components/verdict-pill";
 import { STATUS_LABELS } from "@/lib/constants";
+import { noIndexRobots } from "@/lib/seo";
 import { getCurrentUser } from "@/server/auth";
 import { reviewsByAuthor } from "@/server/queries";
+
+export const metadata: Metadata = {
+  title: "Mis opiniones",
+  robots: noIndexRobots,
+};
 
 export const dynamic = "force-dynamic";
 
@@ -23,10 +31,18 @@ export default async function MyReviewsPage() {
 
   return (
     <div className="mx-auto grid max-w-3xl gap-5 px-4 py-8">
-      <h1 className="flex items-center gap-2 font-heading text-2xl">
-        <ClipboardList className="size-6 text-primary" aria-hidden />
-        Mis opiniones
-      </h1>
+      <div className="flex flex-wrap items-center gap-2">
+        <h1 className="flex items-center gap-2 font-heading text-2xl">
+          <ClipboardList className="size-6 text-primary" aria-hidden />
+          Mis opiniones
+        </h1>
+        {user.role === "ADMIN" ? (
+          <Badge className="gap-1">
+            <ShieldCheck className="size-3.5" aria-hidden />
+            Administrador
+          </Badge>
+        ) : null}
+      </div>
       <p className="text-base">Desde aquí puedes marcar cuando el negocio ya resolvió el problema. La opinión no se borra.</p>
       {reviews.length === 0 ? (
         <div className="grid justify-items-start gap-3 rounded-xl bg-muted px-4 py-4">

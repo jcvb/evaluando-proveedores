@@ -208,6 +208,18 @@ export async function getProvider(id: string) {
   });
 }
 
+export async function getReviewForAdmin(id: string) {
+  return prisma.review.findUnique({
+    where: { id },
+    include: {
+      provider: { select: { id: true, businessName: true } },
+      category: { select: { name: true, slug: true } },
+      media: { orderBy: { createdAt: "asc" } },
+      author: { select: { id: true, name: true, email: true } },
+    },
+  });
+}
+
 export async function reviewsByAuthor(authorId: string) {
   return prisma.review.findMany({
     where: { authorId },
@@ -228,4 +240,61 @@ export async function helpfulVoteSet(userId: string, reviewIds: string[]) {
     select: { reviewId: true },
   });
   return new Set(votes.map((vote) => vote.reviewId));
+}
+
+export async function listProvidersForSitemap(limit = 5000) {
+  return prisma.providerProfile.findMany({
+    select: { id: true, updatedAt: true },
+    orderBy: { updatedAt: "desc" },
+    take: limit,
+  });
+}
+
+export async function listProvidersForLlms(limit = 40) {
+  return prisma.providerProfile.findMany({
+    where: { totalReviews: { gt: 0 } },
+    select: {
+      id: true,
+      businessName: true,
+      primaryCity: true,
+      primaryState: true,
+      averageScore: true,
+      totalReviews: true,
+      categories: { select: { name: true, slug: true } },
+    },
+    orderBy: [{ totalReviews: "desc" }, { averageScore: "desc" }],
+    take: limit,
+  });
+}
+
+export async function listRecentReviewsForFeed(limit = 30) {
+  return prisma.review.findMany({
+    where: { status: { not: "UNDER_MODERATION" } },
+    orderBy: { createdAt: "desc" },
+    take: limit,
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      verdict: true,
+      rating: true,
+      createdAt: true,
+      updatedAt: true,
+      cityOrMunicipality: true,
+      state: true,
+      category: { select: { name: true, slug: true } },
+      provider: {
+        select: {
+          id: true,
+          businessName: true,
+          primaryCity: true,
+          primaryState: true,
+        },
+      },
+    },
+  });
+}
+
+export async function getCategoryBySlug(slug: string) {
+  return prisma.serviceCategory.findUnique({ where: { slug } });
 }

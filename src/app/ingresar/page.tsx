@@ -1,6 +1,13 @@
+import type { Metadata } from "next";
 import { LogIn } from "lucide-react";
 import { AuthForm } from "@/components/auth-form";
 import { localAuthAllowed, supabaseConfigured } from "@/lib/env";
+import { noIndexRobots } from "@/lib/seo";
+
+export const metadata: Metadata = {
+  title: "Entrar",
+  robots: noIndexRobots,
+};
 
 export default function LoginPage() {
   return (

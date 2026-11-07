@@ -1,9 +1,16 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { Store } from "lucide-react";
 import { ClaimPanel } from "@/components/claim-panel";
 import { supabaseConfigured } from "@/lib/env";
+import { noIndexRobots } from "@/lib/seo";
 import { getCurrentUser } from "@/server/auth";
 import { getProvider } from "@/server/queries";
+
+export const metadata: Metadata = {
+  title: "Reclamar negocio",
+  robots: noIndexRobots,
+};
 
 export const dynamic = "force-dynamic";
 

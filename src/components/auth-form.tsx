@@ -14,7 +14,8 @@ export function AuthForm({ mode, google, local = false }: { mode: "login" | "reg
 
   return (
     <div className="mx-auto grid w-full max-w-md gap-4">
-      <form action={formAction} className="grid gap-4 rounded-xl bg-card p-4 ring-1 ring-foreground/10">
+      <form action={formAction} className="grid gap-4 rounded-xl bg-card p-4 ring-1 ring-foreground/10" aria-busy={pending}>
+        <fieldset disabled={pending} className="contents">
         {mode === "register" ? (
           <div>
             <Label htmlFor="name">Tu nombre</Label>
@@ -65,12 +66,13 @@ export function AuthForm({ mode, google, local = false }: { mode: "login" | "reg
             </Link>
           )}
         </p>
+        </fieldset>
       </form>
       {google ? (
-        <form action={loginWithGoogleAction}>
-          <Button type="submit" variant="outline" className="w-full">
-            <Globe aria-hidden />
-            Entrar con Google
+        <form action={loginWithGoogleAction} aria-busy={pending}>
+          <Button type="submit" variant="outline" className="w-full" disabled={pending}>
+            {pending ? <LoaderCircle className="animate-spin" aria-hidden /> : <Globe aria-hidden />}
+            {pending ? "Espera…" : "Entrar con Google"}
           </Button>
         </form>
       ) : null}

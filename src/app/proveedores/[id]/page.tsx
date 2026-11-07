@@ -1,8 +1,10 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   BadgeCheck,
   CalendarDays,
+  ChevronRight,
   FileSignature,
   Globe,
   Inbox,
@@ -14,16 +16,17 @@ import {
   Star,
   Store,
   TriangleAlert,
-  UserRound,
   Wallet,
   Wrench,
 } from "lucide-react";
+import { JsonLd } from "@/components/json-ld";
 import { ReplyForm } from "@/components/reply-form";
 import { ReviewControls } from "@/components/review-controls";
 import { Stars, VerdictPill } from "@/components/verdict-pill";
 import { Badge } from "@/components/ui/badge";
 import { MEDIA_LABELS, STATUS_LABELS } from "@/lib/constants";
 import { formatMxPhone } from "@/lib/phone";
+import { absoluteUrl, buildPageMetadata, SITE, truncateMeta } from "@/lib/seo";
 import { getCurrentUser } from "@/server/auth";
 import { getProvider, helpfulVoteSet } from "@/server/queries";
 import { buttonVariants } from "@/components/ui/button";
@@ -31,11 +34,47 @@ import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
+type Props = { params: Promise<{ id: string }> };
+
 function when(date: Date) {
   return new Intl.DateTimeFormat("es-MX", { dateStyle: "medium" }).format(date);
 }
 
-export default async function ProviderPage({ params }: { params: Promise<{ id: string }> }) {
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params;
+  let provider: Awaited<ReturnType<typeof getProvider>> = null;
+  try {
+    provider = await getProvider(id);
+  } catch {
+    /* ignore */
+  }
+  if (!provider) {
+    return { title: "Proveedor no encontrado", robots: { index: false } };
+  }
+
+  const oficios = provider.categories.map((c) => c.name).join(", ") || "oficios";
+  const title = `${provider.businessName}: opiniones y calificación`;
+  const description = truncateMeta(
+    `${provider.businessName} en ${provider.primaryCity}, ${provider.primaryState}. ${oficios}. ${provider.totalReviews} opiniones, promedio ${provider.averageScore.toFixed(1)}/5. Lee fotos y respuestas antes de contratar.`,
+  );
+
+  return buildPageMetadata({
+    title,
+    description,
+    path: `/proveedores/${provider.id}`,
+    type: "profile",
+    keywords: [
+      provider.businessName,
+      oficios,
+      provider.primaryCity,
+      provider.primaryState,
+      `opiniones ${provider.businessName}`,
+      ...SITE.keywords,
+    ],
+  });
+}
+
+export default async function ProviderPage({ params }: Props) {
   const { id } = await params;
   let provider: Awaited<ReturnType<typeof getProvider>> = null;
   try {
@@ -48,9 +87,104 @@ export default async function ProviderPage({ params }: { params: Promise<{ id: s
   const user = await getCurrentUser();
   const votes = user ? await helpfulVoteSet(user.id, provider.reviews.map((review) => review.id)) : new Set<string>();
   const ownsProfile = user?.id === provider.claimedByUserId;
+  const pageUrl = absoluteUrl(`/proveedores/${provider.id}`);
+  const oficios = provider.categories.map((c) => c.name);
+  const primaryOficio = oficios[0];
+
+  const localBusinessLd: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": "HomeAndConstructionBusiness",
+    "@id": `${pageUrl}#business`,
+    name: provider.businessName,
+    url: pageUrl,
+    telephone: formatMxPhone(provider.phonePrimary),
+    address: {
+      "@type": "PostalAddress",
+      addressLocality: provider.primaryCity,
+      addressRegion: provider.primaryState,
+      addressCountry: "MX",
+      ...(provider.googleFormattedAddress ? { streetAddress: provider.googleFormattedAddress } : {}),
+    },
+    areaServed: {
+      "@type": "AdministrativeArea",
+      name: `${provider.primaryCity}, ${provider.primaryState}`,
+    },
+    ...(primaryOficio ? { knowsAbout: oficios } : {}),
+    ...(provider.socialMediaUrl ? { sameAs: [provider.socialMediaUrl] } : {}),
+    ...(provider.googleMapsUrl ? { hasMap: provider.googleMapsUrl } : {}),
+  };
+
+  if (provider.totalReviews > 0) {
+    localBusinessLd.aggregateRating = {
+      "@type": "AggregateRating",
+      ratingValue: Number(provider.averageScore.toFixed(1)),
+      bestRating: 5,
+      worstRating: 1,
+      ratingCount: provider.totalReviews,
+      reviewCount: provider.totalReviews,
+    };
+    localBusinessLd.review = provider.reviews.slice(0, 10).map((review) => ({
+      "@type": "Review",
+      name: review.title,
+      reviewBody: truncateMeta(review.description, 300),
+      datePublished: review.createdAt.toISOString(),
+      reviewRating: {
+        "@type": "Rating",
+        ratingValue: review.rating,
+        bestRating: 5,
+        worstRating: 1,
+      },
+      author: { "@type": "Person", name: "Cliente verificado" },
+      publisher: { "@type": "Organization", name: SITE.name },
+      ...(review.providerReply
+        ? {
+            comment: {
+              "@type": "Comment",
+              text: truncateMeta(review.providerReply.content, 280),
+              author: { "@type": "Organization", name: provider.businessName },
+            },
+          }
+        : {}),
+    }));
+  }
+
+  const breadcrumbLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Inicio", item: absoluteUrl("/") },
+      ...(primaryOficio
+        ? [
+            {
+              "@type": "ListItem",
+              position: 2,
+              name: primaryOficio,
+              item: absoluteUrl(`/oficios/${provider.categories[0].slug}`),
+            },
+            { "@type": "ListItem", position: 3, name: provider.businessName, item: pageUrl },
+          ]
+        : [{ "@type": "ListItem", position: 2, name: provider.businessName, item: pageUrl }]),
+    ],
+  };
 
   return (
     <div className="mx-auto grid max-w-3xl gap-8 px-4 py-8">
+      <JsonLd data={[localBusinessLd, breadcrumbLd]} />
+      <nav aria-label="Migas de pan" className="flex flex-wrap items-center gap-1 text-sm text-muted-foreground">
+        <Link href="/" className="hover:underline">
+          Inicio
+        </Link>
+        {primaryOficio ? (
+          <>
+            <ChevronRight className="size-3.5" aria-hidden />
+            <Link href={`/oficios/${provider.categories[0].slug}`} className="hover:underline">
+              {primaryOficio}
+            </Link>
+          </>
+        ) : null}
+        <ChevronRight className="size-3.5" aria-hidden />
+        <span className="text-foreground">{provider.businessName}</span>
+      </nav>
       <header className="grid gap-3">
         <div>
           <h1 className="font-heading text-2xl md:text-3xl">{provider.businessName}</h1>
@@ -140,6 +274,11 @@ export default async function ProviderPage({ params }: { params: Promise<{ id: s
             </Link>
           ) : null}
         </div>
+        <p className="text-sm text-muted-foreground">
+          <Link href={`/proveedores/${provider.id}/md`} className="underline">
+            Versión Markdown para agentes de IA
+          </Link>
+        </p>
       </header>
 
       <section className="grid gap-4">
@@ -203,10 +342,6 @@ export default async function ProviderPage({ params }: { params: Promise<{ id: s
                 <FileSignature aria-hidden />
                 {review.hadWrittenContract ? "Hubo un papel firmado" : "No hubo contrato"}
               </li>
-              <li>
-                <UserRound aria-hidden />
-                Escrito por {review.author.name}
-              </li>
             </ul>
             <div className="grid gap-3 sm:grid-cols-2">
               {review.media.map((media) => (
@@ -220,13 +355,21 @@ export default async function ProviderPage({ params }: { params: Promise<{ id: s
                 </figure>
               ))}
             </div>
-            <ReviewControls
-              reviewId={review.id}
-              helpfulCount={review.helpfulCount}
-              voted={votes.has(review.id)}
-              canResolve={user?.id === review.authorId}
-              resolved={review.status === "RESOLVED_AFTER_ISSUE"}
-            />
+            <div className="flex flex-wrap items-center gap-2">
+              <ReviewControls
+                reviewId={review.id}
+                helpfulCount={review.helpfulCount}
+                voted={votes.has(review.id)}
+                canResolve={user?.id === review.authorId}
+                resolved={review.status === "RESOLVED_AFTER_ISSUE"}
+              />
+              {user?.role === "ADMIN" ? (
+                <Link href={`/admin/resenas/${review.id}/editar`} className={buttonVariants({ variant: "outline" })}>
+                  <PenLine aria-hidden />
+                  Editar (admin)
+                </Link>
+              ) : null}
+            </div>
             {review.providerReply ? (
               <blockquote className="rounded-xl border-l-4 border-primary bg-muted px-4 py-3">
                 <p className="flex items-center gap-1.5 font-semibold">

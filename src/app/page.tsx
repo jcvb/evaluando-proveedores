@@ -1,17 +1,54 @@
+import type { Metadata } from "next";
+import Link from "next/link";
 import { Camera, Reply, SearchX, ShieldCheck, TriangleAlert } from "lucide-react";
 import { ProviderCard } from "@/components/provider-card";
 import { SearchForm } from "@/components/search-form";
 import { SERVICE_CATEGORIES } from "@/lib/constants";
 import { databaseConfigured } from "@/lib/prisma";
+import { absoluteUrl, buildPageMetadata, SITE } from "@/lib/seo";
 import { listCategories, searchProviders, type SearchFilters } from "@/server/queries";
 
 export const dynamic = "force-dynamic";
 
-export default async function HomePage({
-  searchParams,
-}: {
+type HomeProps = {
   searchParams: Promise<Record<string, string | undefined>>;
-}) {
+};
+
+function hasActiveFilters(filters: SearchFilters) {
+  return Boolean(
+    filters.q || filters.oficio || filters.estado || filters.municipio || filters.colonia || filters.fraccionamiento || filters.veredicto,
+  );
+}
+
+export async function generateMetadata({ searchParams }: HomeProps): Promise<Metadata> {
+  const params = await searchParams;
+  const filtered = hasActiveFilters({
+    q: params.q,
+    oficio: params.oficio,
+    estado: params.estado,
+    municipio: params.municipio,
+    colonia: params.colonia,
+    fraccionamiento: params.fraccionamiento,
+    veredicto: params.veredicto === "BUENO" || params.veredicto === "MALO" || params.veredicto === "REGULAR" ? params.veredicto : "",
+  });
+
+  if (filtered) {
+    return {
+      title: "Resultados de búsqueda",
+      description: SITE.description,
+      robots: { index: false, follow: true },
+      alternates: { canonical: absoluteUrl("/") },
+    };
+  }
+
+  return buildPageMetadata({
+    title: `${SITE.name}: opiniones de oficios en México`,
+    description: SITE.description,
+    path: "/",
+  });
+}
+
+export default async function HomePage({ searchParams }: HomeProps) {
   const params = await searchParams;
   const filters: SearchFilters = {
     q: params.q,
@@ -40,7 +77,7 @@ export default async function HomePage({
     }
   }
 
-  const hasFilters = Boolean(filters.q || filters.oficio || filters.estado || filters.municipio || filters.colonia || filters.fraccionamiento || filters.veredicto);
+  const hasFilters = hasActiveFilters(filters);
 
   return (
     <div className="mx-auto grid max-w-5xl gap-6 px-4 py-8">
@@ -63,6 +100,13 @@ export default async function HomePage({
             Nadie borra lo escrito
           </li>
         </ul>
+        <p className="text-sm">
+          También puedes{" "}
+          <Link href="/oficios" className="font-medium text-primary underline">
+            explorar por oficio
+          </Link>
+          .
+        </p>
       </section>
       <SearchForm key={JSON.stringify(filters)} categories={categories} defaults={filters} />
       {notice ? (

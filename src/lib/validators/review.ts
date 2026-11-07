@@ -178,6 +178,67 @@ export const reviewSchema = z
 
 export type ReviewInput = z.infer<typeof reviewSchema>;
 
+/** Edición administrativa: no crea proveedor ni cambia fotos (tampoco borra la opinión). */
+export const updateReviewSchema = z
+  .object({
+    reviewId: z.string().uuid(),
+    categorySlug: z.string().min(1, "Elige un oficio"),
+    verdict: z.enum(["BUENO", "MALO", "REGULAR"]),
+    rating: z.number().int().min(1).max(5),
+    title: z.string().trim().min(8, "Resume el caso en al menos 8 caracteres").max(140),
+    description: z.string().trim().min(30, "Cuenta qué pasó, con al menos 30 caracteres").max(5000),
+    tags: z.array(z.string()).max(8),
+    serviceDate: z.string().min(1, "Indica la fecha aproximada del trabajo"),
+    costRange: z.union([z.literal(""), z.enum(COST_RANGES)]).optional(),
+    gaveAdvancePayment: z.boolean(),
+    advancePercentage: z.number().int().min(1).max(100).optional().nullable(),
+    hadWrittenContract: z.boolean(),
+    postalCode: z.string().regex(/^\d{5}$/, "El código postal tiene 5 dígitos"),
+    state: z.string().trim().min(2),
+    cityOrMunicipality: z.string().trim().min(2),
+    townOrLocality: z.string().trim().max(120).optional(),
+    colonia: z.string().trim().min(2, "Elige la colonia"),
+    fraccionamiento: z.string().trim().max(160).optional(),
+    calle: z.string().trim().max(160).optional(),
+  })
+  .superRefine((value, ctx) => {
+    if (value.verdict === "BUENO" && (value.rating < 4 || value.rating > 5)) {
+      ctx.addIssue({ code: "custom", path: ["rating"], message: "Una reseña recomendada va de 4 a 5 estrellas" });
+    }
+    if (value.verdict === "REGULAR" && value.rating !== 3) {
+      ctx.addIssue({ code: "custom", path: ["rating"], message: "Una reseña regular corresponde a 3 estrellas" });
+    }
+    if (value.verdict === "MALO" && (value.rating < 1 || value.rating > 2)) {
+      ctx.addIssue({ code: "custom", path: ["rating"], message: "Una alerta va de 1 a 2 estrellas" });
+    }
+    const allowed =
+      value.verdict === "MALO"
+        ? new Set<string>(NEGATIVE_TAGS)
+        : value.verdict === "BUENO"
+          ? new Set<string>(POSITIVE_TAGS)
+          : new Set<string>([...NEGATIVE_TAGS, ...POSITIVE_TAGS]);
+    value.tags.forEach((tag, index) => {
+      if (!allowed.has(tag)) {
+        ctx.addIssue({ code: "custom", path: ["tags", index], message: "Esa etiqueta no corresponde al veredicto" });
+      }
+    });
+    if (value.gaveAdvancePayment && (value.advancePercentage == null || value.advancePercentage < 1)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["advancePercentage"],
+        message: "Indica el porcentaje aproximado del anticipo",
+      });
+    }
+    const date = new Date(`${value.serviceDate}T12:00:00Z`);
+    const limit = new Date();
+    limit.setUTCDate(limit.getUTCDate() + 1);
+    if (Number.isNaN(date.getTime()) || date > limit) {
+      ctx.addIssue({ code: "custom", path: ["serviceDate"], message: "La fecha del trabajo no puede ser futura" });
+    }
+  });
+
+export type UpdateReviewInput = z.infer<typeof updateReviewSchema>;
+
 export const replySchema = z.object({
   reviewId: z.string().uuid(),
   content: z.string().trim().min(20, "Explica tu versión con al menos 20 caracteres").max(4000),

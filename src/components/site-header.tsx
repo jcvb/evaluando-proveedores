@@ -51,6 +51,10 @@ export function SiteHeader({
           </span>
         </Link>
         <nav className="flex items-center gap-2">
+          <Link href="/oficios" className={buttonVariants({ variant: "outline" })}>
+            <Hammer aria-hidden />
+            Oficios
+          </Link>
           <Link href="/resenas/nueva" className={buttonVariants()}>
             <PenLine aria-hidden />
             Contar mi experiencia
@@ -65,7 +69,7 @@ export function SiteHeader({
                 onClick={() => setOpen((current) => !current)}
               >
                 <UserRound aria-hidden />
-                Mi cuenta
+                {user.role === "ADMIN" ? "Admin" : "Mi cuenta"}
                 <ChevronDown className={cn("transition-transform", open && "rotate-180")} aria-hidden />
               </button>
               {open ? (
@@ -73,7 +77,21 @@ export function SiteHeader({
                   role="menu"
                   className="absolute right-0 z-50 mt-2 grid w-56 gap-0.5 rounded-xl border border-border bg-card p-1.5 shadow-lg"
                 >
-                  <p className="truncate px-3 py-1.5 text-sm text-muted-foreground">{user.name}</p>
+                  <div className="px-3 py-1.5">
+                    <p className="truncate text-sm font-medium">{user.name}</p>
+                    {user.role === "ADMIN" ? (
+                      <p className="mt-0.5 flex items-center gap-1 text-xs font-semibold text-primary">
+                        <ShieldCheck className="size-3.5" aria-hidden />
+                        Administrador
+                      </p>
+                    ) : (
+                      <p className="mt-0.5 truncate text-xs text-muted-foreground">Cuenta de usuario</p>
+                    )}
+                  </div>
+                  <Link href="/cuenta" className={menuItem} role="menuitem" onClick={() => setOpen(false)}>
+                    <UserRound aria-hidden />
+                    Ver mi perfil
+                  </Link>
                   <Link href="/mis-resenas" className={menuItem} role="menuitem" onClick={() => setOpen(false)}>
                     <ClipboardList aria-hidden />
                     Mis opiniones

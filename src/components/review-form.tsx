@@ -194,6 +194,7 @@ export function ReviewForm({
 
   function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (pending) return;
     const form = new FormData(event.currentTarget);
     const newProvider =
       mode === "new"
@@ -265,7 +266,8 @@ export function ReviewForm({
       : ["COMPLETED_WORK", "CONTRACT_RECEIPT", "DEFECT_EVIDENCE"];
 
   return (
-    <form onSubmit={submit} className="grid gap-8">
+    <form onSubmit={submit} className="grid gap-8" aria-busy={pending}>
+      <fieldset disabled={pending} className="contents">
       <section className="grid gap-4">
         <SectionHeading
           icon={Hammer}
@@ -672,6 +674,7 @@ export function ReviewForm({
         {pending ? <LoaderCircle className="animate-spin" aria-hidden /> : <Send aria-hidden />}
         {pending ? "Publicando…" : "Publicar mi opinión"}
       </Button>
+      </fieldset>
     </form>
   );
 }

@@ -151,4 +151,17 @@
     font-size: 1rem;
     line-height: 1.4;
   }
+
+  .nav-progress {
+    animation: nav-progress-slide 0.9s ease-in-out infinite;
+  }
+
+  @keyframes nav-progress-slide {
+    0% {
+      transform: translateX(-120%);
+    }
+    100% {
+      transform: translateX(320%);
+    }
+  }
 }

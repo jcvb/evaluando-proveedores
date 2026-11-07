@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import type { MediaType } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { reviewSchema } from "@/lib/validators/review";
+import { reviewSchema, updateReviewSchema } from "@/lib/validators/review";
 import { getCurrentUser } from "@/server/auth";
 import { removeStored, storeEvidence, toPublicJpeg } from "@/server/images";
 import { recomputeProviderMetrics } from "@/server/metrics";
@@ -105,5 +105,66 @@ export async function createReview(
     }
     console.error(error);
     return { ok: false, error: "No se pudo publicar la reseña. Revisa la base de datos y vuelve a intentar." };
+  }
+}
+
+export async function updateReviewAction(
+  payload: unknown,
+): Promise<{ ok: true; providerId: string } | { ok: false; error: string }> {
+  const user = await getCurrentUser();
+  if (!user) return { ok: false, error: "Inicia sesión" };
+  if (user.role !== "ADMIN") return { ok: false, error: "Solo un administrador puede editar opiniones" };
+
+  const parsed = updateReviewSchema.safeParse(payload);
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0]?.message ?? "Revisa los datos" };
+  }
+  const input = parsed.data;
+
+  const category = await prisma.serviceCategory.findUnique({ where: { slug: input.categorySlug } });
+  if (!category) return { ok: false, error: "Ese oficio no está en el catálogo" };
+
+  try {
+    const updated = await prisma.$transaction(async (tx) => {
+      const existing = await tx.review.findUnique({ where: { id: input.reviewId }, select: { id: true, providerId: true } });
+      if (!existing) throw new Error("No encontramos esa opinión");
+
+      await tx.review.update({
+        where: { id: existing.id },
+        data: {
+          categoryId: category.id,
+          verdict: input.verdict,
+          rating: input.rating,
+          title: input.title,
+          description: input.description,
+          tags: input.tags,
+          serviceDate: new Date(`${input.serviceDate}T12:00:00Z`),
+          costRange: input.costRange || null,
+          gaveAdvancePayment: input.gaveAdvancePayment,
+          advancePercentage: input.gaveAdvancePayment ? input.advancePercentage : null,
+          hadWrittenContract: input.hadWrittenContract,
+          postalCode: input.postalCode,
+          state: input.state.trim(),
+          cityOrMunicipality: input.cityOrMunicipality.trim(),
+          townOrLocality: input.townOrLocality?.trim() || null,
+          colonia: input.colonia.trim(),
+          fraccionamiento: input.fraccionamiento?.trim() || null,
+          calle: input.calle?.trim() || null,
+        },
+      });
+      await recomputeProviderMetrics(tx, existing.providerId);
+      return { providerId: existing.providerId };
+    });
+
+    revalidatePath("/");
+    revalidatePath("/mis-resenas");
+    revalidatePath(`/proveedores/${updated.providerId}`);
+    revalidatePath(`/admin/resenas/${input.reviewId}/editar`);
+    return { ok: true, providerId: updated.providerId };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "";
+    if (message.startsWith("No encontramos")) return { ok: false, error: message };
+    console.error(error);
+    return { ok: false, error: "No se pudo guardar la edición" };
   }
 }

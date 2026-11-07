@@ -1,10 +1,18 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { Camera, Hammer, MapPin, MessageSquareText, PenLine, TriangleAlert } from "lucide-react";
 import { ReviewForm } from "@/components/review-form";
 import { SERVICE_CATEGORIES } from "@/lib/constants";
 import { databaseConfigured } from "@/lib/prisma";
+import { noIndexRobots } from "@/lib/seo";
 import { getCurrentUser } from "@/server/auth";
 import { getProvider, listCategories } from "@/server/queries";
+
+export const metadata: Metadata = {
+  title: "Publicar opinión",
+  description: "Cuenta cómo te fue con un maestro o taller. Se pide al menos una foto.",
+  robots: noIndexRobots,
+};
 
 export const dynamic = "force-dynamic";
 

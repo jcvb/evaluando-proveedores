@@ -1,6 +1,13 @@
+import type { Metadata } from "next";
 import { UserPlus } from "lucide-react";
 import { AuthForm } from "@/components/auth-form";
 import { localAuthAllowed, supabaseConfigured } from "@/lib/env";
+import { noIndexRobots } from "@/lib/seo";
+
+export const metadata: Metadata = {
+  title: "Crear cuenta",
+  robots: noIndexRobots,
+};
 
 export default function RegisterPage() {
   return (

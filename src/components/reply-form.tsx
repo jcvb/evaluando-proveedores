@@ -20,8 +20,10 @@ export function ReplyForm({ reviewId }: { reviewId: string }) {
   return (
     <form
       className="mt-3 grid gap-3 rounded-xl bg-muted/60 p-3"
+      aria-busy={pending}
       onSubmit={(event) => {
         event.preventDefault();
+        if (pending) return;
         const body = new FormData();
         body.set(
           "payload",
@@ -45,6 +47,7 @@ export function ReplyForm({ reviewId }: { reviewId: string }) {
         });
       }}
     >
+      <fieldset disabled={pending} className="contents">
       <Label htmlFor={`reply-${reviewId}`} className="flex items-center gap-1.5">
         <Reply className="size-4 text-primary" aria-hidden />
         Tu respuesta
@@ -65,6 +68,7 @@ export function ReplyForm({ reviewId }: { reviewId: string }) {
           accept="image/*"
           multiple
           className="sr-only"
+          disabled={pending}
           onChange={(event) => {
             const list = Array.from(event.target.files ?? []).slice(0, MAX_REPLY_PHOTOS);
             void Promise.all(list.map((file) => preparePhoto(file))).then(setFiles);
@@ -75,6 +79,7 @@ export function ReplyForm({ reviewId }: { reviewId: string }) {
         {pending ? <LoaderCircle className="animate-spin" aria-hidden /> : <Send aria-hidden />}
         {pending ? "Publicando…" : "Publicar mi respuesta"}
       </Button>
+      </fieldset>
     </form>
   );
 }

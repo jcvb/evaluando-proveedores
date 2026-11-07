@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Search, SlidersHorizontal, X } from "lucide-react";
+import { LoaderCircle, Search, SlidersHorizontal, X } from "lucide-react";
 import { AddressFields, emptyAddress, type AddressValue } from "@/components/address-fields";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -34,6 +34,7 @@ export function SearchForm({
   defaults: Defaults;
 }) {
   const router = useRouter();
+  const [pending, startTransition] = useTransition();
   const [q, setQ] = useState(defaults.q ?? "");
   const [oficio, setOficio] = useState(defaults.oficio ?? "");
   const [veredicto, setVeredicto] = useState(defaults.veredicto ?? "");
@@ -66,7 +67,9 @@ export function SearchForm({
       const text = String(value ?? "").trim();
       if (text) params.set(key, text);
     }
-    router.push(params.size ? `/?${params}` : "/");
+    startTransition(() => {
+      router.push(params.size ? `/?${params}` : "/");
+    });
   }
 
   function currentValues(): Defaults {
@@ -105,12 +108,15 @@ export function SearchForm({
     <form
       role="search"
       className="grid gap-3"
+      aria-busy={pending}
       onSubmit={(event) => {
         event.preventDefault();
+        if (pending) return;
         setOpen(false);
         go(currentValues());
       }}
     >
+      <fieldset disabled={pending} className="contents">
       <div className="flex items-center gap-2 rounded-2xl bg-card p-1.5 shadow-sm ring-1 ring-foreground/15 focus-within:ring-2 focus-within:ring-primary">
         <Search className="ml-2 size-5 shrink-0 text-muted-foreground" aria-hidden />
         <label htmlFor="q" className="sr-only">
@@ -122,11 +128,12 @@ export function SearchForm({
           value={q}
           onChange={(event) => setQ(event.target.value)}
           placeholder="Busca por nombre, teléfono u oficio"
-          className="h-10 min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-muted-foreground"
+          className="h-10 min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-muted-foreground disabled:opacity-60"
           autoComplete="off"
         />
-        <Button type="submit" size="lg" className="shrink-0 px-5">
-          Buscar
+        <Button type="submit" size="lg" className="shrink-0 px-5" disabled={pending}>
+          {pending ? <LoaderCircle className="animate-spin" aria-hidden /> : null}
+          {pending ? "Buscando…" : "Buscar"}
         </Button>
       </div>
 
@@ -136,6 +143,7 @@ export function SearchForm({
           variant={open ? "secondary" : "outline"}
           aria-expanded={open}
           aria-controls="search-filters"
+          disabled={pending}
           onClick={() => setOpen((current) => !current)}
         >
           <SlidersHorizontal aria-hidden />
@@ -221,15 +229,16 @@ export function SearchForm({
           <AddressFields value={address} onChange={setAddress} requireColonia={false} showCalle={false} />
         </div>
         <div className="flex flex-wrap justify-end gap-2">
-          <Button type="button" variant="ghost" onClick={clearFilters}>
+          <Button type="button" variant="ghost" onClick={clearFilters} disabled={pending}>
             Limpiar
           </Button>
-          <Button type="submit">
-            <Search aria-hidden />
-            Aplicar filtros
+          <Button type="submit" disabled={pending}>
+            {pending ? <LoaderCircle className="animate-spin" aria-hidden /> : <Search aria-hidden />}
+            {pending ? "Buscando…" : "Aplicar filtros"}
           </Button>
         </div>
       </div>
+      </fieldset>
     </form>
   );
 }

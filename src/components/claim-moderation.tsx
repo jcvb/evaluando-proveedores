@@ -3,7 +3,7 @@
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { CircleCheck, CircleX } from "lucide-react";
+import { CircleCheck, CircleX, LoaderCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { moderateClaim } from "@/server/actions/claims";
 
@@ -24,14 +24,14 @@ export function ClaimModeration({ claimId }: { claimId: string }) {
   }
 
   return (
-    <div className="grid gap-3 sm:grid-cols-2">
+    <div className="grid gap-3 sm:grid-cols-2" aria-busy={pending}>
       <Button type="button" disabled={pending} onClick={() => decide("APPROVED")}>
-        <CircleCheck aria-hidden />
-        Aprobar
+        {pending ? <LoaderCircle className="animate-spin" aria-hidden /> : <CircleCheck aria-hidden />}
+        {pending ? "Procesando…" : "Aprobar"}
       </Button>
       <Button type="button" variant="outline" disabled={pending} onClick={() => decide("REJECTED")}>
-        <CircleX aria-hidden />
-        Rechazar
+        {pending ? <LoaderCircle className="animate-spin" aria-hidden /> : <CircleX aria-hidden />}
+        {pending ? "Procesando…" : "Rechazar"}
       </Button>
     </div>
   );

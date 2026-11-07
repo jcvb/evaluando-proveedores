@@ -151,7 +151,8 @@ export function ClaimPanel({
        
         className="w-full sm:w-fit"
         disabled={pending || !providerId}
-        onClick={() =>
+        onClick={() => {
+          if (pending || !providerId) return;
           startTransition(async () => {
             const result = await requestClaim({ providerId, phone, note });
             if (!result.ok) {
@@ -160,8 +161,8 @@ export function ClaimPanel({
             }
             toast.success(result.status === "APPROVED" ? "Este negocio ya quedó a tu nombre" : "Enviamos tu solicitud a revisión");
             router.refresh();
-          })
-        }
+          });
+        }}
       >
         {pending ? <LoaderCircle className="animate-spin" aria-hidden /> : <Send aria-hidden />}
         {pending ? "Enviando…" : "Enviar solicitud"}

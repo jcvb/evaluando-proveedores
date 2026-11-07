@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { CircleCheck, ThumbsUp } from "lucide-react";
+import { CircleCheck, LoaderCircle, ThumbsUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { markResolved, toggleHelpful } from "@/server/actions/engagement";
 
@@ -26,7 +26,7 @@ export function ReviewControls({
   const [count, setCount] = useState(helpfulCount);
 
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-2" aria-busy={pending}>
       <Button
         type="button"
         variant={helpful ? "secondary" : "outline"}
@@ -44,8 +44,8 @@ export function ReviewControls({
           })
         }
       >
-        <ThumbsUp className={helpful ? "fill-current" : undefined} aria-hidden />
-        {helpful ? `Te sirvió · ${count}` : `Me sirve esta opinión · ${count}`}
+        {pending ? <LoaderCircle className="animate-spin" aria-hidden /> : <ThumbsUp className={helpful ? "fill-current" : undefined} aria-hidden />}
+        {pending ? "Espera…" : helpful ? `Te sirvió · ${count}` : `Me sirve esta opinión · ${count}`}
       </Button>
       {canResolve && !resolved ? (
         <Button
@@ -64,8 +64,8 @@ export function ReviewControls({
             })
           }
         >
-          <CircleCheck aria-hidden />
-          Ya me resolvieron el problema
+          {pending ? <LoaderCircle className="animate-spin" aria-hidden /> : <CircleCheck aria-hidden />}
+          {pending ? "Guardando…" : "Ya me resolvieron el problema"}
         </Button>
       ) : null}
     </div>
