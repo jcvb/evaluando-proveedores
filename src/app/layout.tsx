@@ -140,6 +140,12 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
               <Link href="/resenas/nueva" className="hover:underline">
                 Publicar opinión
               </Link>
+              <Link href="/terminos" className="hover:underline">
+                Términos y condiciones
+              </Link>
+              <Link href="/aviso-privacidad" className="hover:underline">
+                Aviso de privacidad
+              </Link>
               <Link href="/feed.xml" className="hover:underline">
                 Feed RSS
               </Link>

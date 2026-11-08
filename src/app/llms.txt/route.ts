@@ -47,6 +47,8 @@ Cómo interpretar el contenido:
 ## Documentación esencial
 
 - [Contexto del sitio](${absoluteUrl("/contexto.md")}): qué es, reglas y cómo citar
+- [Términos y condiciones](${absoluteUrl("/terminos")}): reglas de uso y contenido
+- [Aviso de privacidad](${absoluteUrl("/aviso-privacidad")}): LFPDPPP, datos y derechos ARCO
 - [Catálogo completo (llms-full)](${absoluteUrl("/llms-full.txt")}): más perfiles y oficios
 - [Sitemap](${absoluteUrl("/sitemap.xml")}): todas las URLs indexables
 - [Feed RSS](${absoluteUrl("/feed.xml")}): opiniones recientes

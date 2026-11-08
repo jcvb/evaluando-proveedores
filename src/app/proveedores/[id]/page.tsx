@@ -191,18 +191,24 @@ export default async function ProviderPage({ params }: Props) {
           <ul className="mt-2 grid gap-1.5 [&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:text-muted-foreground">
             <li className="flex items-center gap-2">
               <Wrench aria-hidden />
-              {provider.categories.map((category) => category.name).join(" · ")}
+              {provider.categories.length > 0
+                ? provider.categories.map((category) => category.name).join(" · ")
+                : "Oficio sin detallar"}
             </li>
             <li className="flex items-center gap-2 text-muted-foreground">
               <MapPin aria-hidden />
-              {provider.primaryCity}, {provider.primaryState}
+              {provider.googleFormattedAddress
+                ? provider.googleFormattedAddress
+                : `${provider.primaryCity}, ${provider.primaryState}`}
             </li>
-            <li className="flex flex-wrap items-center gap-x-2 gap-y-1">
-              <Phone aria-hidden />
-              {provider.contactName ? `${provider.contactName} · ` : ""}
-              {formatMxPhone(provider.phonePrimary)}
-              {provider.phoneSecondary ? ` · ${formatMxPhone(provider.phoneSecondary)}` : ""}
-            </li>
+            {provider.contactName || provider.phonePrimary || provider.phoneSecondary ? (
+              <li className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                <Phone aria-hidden />
+                {provider.contactName ? `${provider.contactName}${provider.phonePrimary ? " · " : ""}` : ""}
+                {provider.phonePrimary ? formatMxPhone(provider.phonePrimary) : ""}
+                {provider.phoneSecondary ? ` · ${formatMxPhone(provider.phoneSecondary)}` : ""}
+              </li>
+            ) : null}
             {provider.socialMediaUrl ? (
               <li className="flex items-center gap-2">
                 <Globe aria-hidden />

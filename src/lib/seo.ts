@@ -10,6 +10,8 @@ export const SITE = {
   locale: "es_MX",
   language: "es-MX",
   country: "MX",
+  /** Correo de contacto legal / ARCO. Sobrescribible con LEGAL_CONTACT_EMAIL. */
+  legalEmail: process.env.LEGAL_CONTACT_EMAIL?.trim() || process.env.ADMIN_EMAILS?.split(",")[0]?.trim() || "privacidad@burodeoficios.mx",
   keywords: [
     "opiniones oficios México",
     "reseñas plomeros",

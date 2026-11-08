@@ -23,7 +23,9 @@
     "db:seed": "node scripts/with-env.mjs development -- node prisma/seed.mjs",
     "db:seed:prod": "node scripts/with-env.mjs production -- node prisma/seed.mjs",
     "db:import-sepomex": "node scripts/with-env.mjs development -- node prisma/import-sepomex.mjs",
-    "db:import-sepomex:prod": "node scripts/with-env.mjs production -- node prisma/import-sepomex.mjs"
+    "db:import-sepomex:prod": "node scripts/with-env.mjs production -- node prisma/import-sepomex.mjs",
+    "db:import-xaltipa": "node scripts/with-env.mjs development -- node prisma/import-xaltipa.mjs",
+    "db:import-xaltipa:prod": "node scripts/with-env.mjs production -- node prisma/import-xaltipa.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",

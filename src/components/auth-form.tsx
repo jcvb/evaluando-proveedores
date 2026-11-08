@@ -45,6 +45,19 @@ export function AuthForm({ mode, google, local = false }: { mode: "login" | "reg
             {state.message}
           </p>
         ) : null}
+        {mode === "register" ? (
+          <p className="text-sm text-muted-foreground">
+            Al crear tu cuenta aceptas los{" "}
+            <Link href="/terminos" className="underline">
+              Términos y condiciones
+            </Link>{" "}
+            y el{" "}
+            <Link href="/aviso-privacidad" className="underline">
+              Aviso de privacidad
+            </Link>
+            .
+          </p>
+        ) : null}
         <Button type="submit" disabled={pending} className="w-full">
           {pending ? (
             <LoaderCircle className="animate-spin" aria-hidden />

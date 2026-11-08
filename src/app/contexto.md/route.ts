@@ -27,6 +27,8 @@ ${SITE.name} es un sitio web público en México donde las personas publican opi
 - Perfil ejemplo: ${absoluteUrl("/proveedores/{id}")} o Markdown ${absoluteUrl("/proveedores/{id}/md")}
 - Mapa para agentes: ${absoluteUrl("/llms.txt")}
 - Feed reciente: ${absoluteUrl("/feed.xml")}
+- Términos: ${absoluteUrl("/terminos")}
+- Aviso de privacidad (LFPDPPP): ${absoluteUrl("/aviso-privacidad")}
 
 ## Oficios cubiertos
 

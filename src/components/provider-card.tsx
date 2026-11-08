@@ -33,17 +33,21 @@ export function ProviderCard({
           <ul className="mt-1 grid gap-1 text-[0.95rem] [&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:text-muted-foreground">
             <li className="flex items-center gap-2">
               <Wrench aria-hidden />
-              {provider.categories.map((category) => category.name).join(" · ")}
+              {provider.categories.length > 0
+                ? provider.categories.map((category) => category.name).join(" · ")
+                : "Oficio sin detallar"}
             </li>
             <li className="flex items-center gap-2 text-muted-foreground">
               <MapPin aria-hidden />
               {provider.primaryCity}, {provider.primaryState}
             </li>
-            <li className="flex items-center gap-2">
-              <Phone aria-hidden />
-              {provider.contactName ? `${provider.contactName} · ` : ""}
-              {formatMxPhone(provider.phonePrimary)}
-            </li>
+            {provider.contactName || provider.phonePrimary ? (
+              <li className="flex items-center gap-2">
+                <Phone aria-hidden />
+                {provider.contactName ? `${provider.contactName}${provider.phonePrimary ? " · " : ""}` : ""}
+                {provider.phonePrimary ? formatMxPhone(provider.phonePrimary) : ""}
+              </li>
+            ) : null}
           </ul>
         </div>
         <div className="mt-auto flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.95rem]">
