@@ -1,10 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import { Atkinson_Hyperlegible } from "next/font/google";
-import Link from "next/link";
 import { Toaster } from "sonner";
 import { JsonLd } from "@/components/json-ld";
 import { NavigationLoading } from "@/components/navigation-loading";
+import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { SITE } from "@/lib/seo";
 import { getCurrentUser } from "@/server/auth";
@@ -128,41 +128,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         </Suspense>
         <SiteHeader user={user ? { name: user.name, role: user.role } : null} />
         <main>{children}</main>
-        <footer className="mx-auto max-w-5xl border-t border-border px-4 py-8 text-sm text-muted-foreground">
-          <div className="grid gap-4 md:grid-cols-[1.4fr_1fr]">
-            <div className="grid gap-2">
-              <p className="font-heading text-base text-foreground">{SITE.name}</p>
-              <p>{SITE.tagline}</p>
-              <p>Cada opinión lleva al menos una foto. Si el problema ya se arregló, la historia sigue visible.</p>
-            </div>
-            <nav aria-label="Pie de sitio" className="grid gap-1.5 sm:justify-self-end">
-              <Link href="/oficios" className="hover:underline">
-                Oficios
-              </Link>
-              <Link href="/resenas/nueva" className="hover:underline">
-                Publicar opinión
-              </Link>
-              <Link href="/terminos" className="hover:underline">
-                Términos y condiciones
-              </Link>
-              <Link href="/aviso-privacidad" className="hover:underline">
-                Aviso de privacidad
-              </Link>
-              <Link href="/feed.xml" className="hover:underline">
-                Feed RSS
-              </Link>
-              <Link href="/llms.txt" className="hover:underline">
-                llms.txt (agentes IA)
-              </Link>
-              <Link href="/contexto.md" className="hover:underline">
-                Contexto del sitio
-              </Link>
-              <Link href="/sitemap.xml" className="hover:underline">
-                Sitemap
-              </Link>
-            </nav>
-          </div>
-        </footer>
+        <SiteFooter />
         <Toaster richColors position="top-center" />
       </body>
     </html>
