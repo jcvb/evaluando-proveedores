@@ -4,7 +4,8 @@ import { lookupPostalCode, searchProviders, suggestFraccionamientos } from "@/se
 
 export async function suggestProvidersAction(q: string) {
   try {
-    return await searchProviders({ q });
+    const result = await searchProviders({ q });
+    return result.items;
   } catch (error) {
     console.error(error);
     return [];

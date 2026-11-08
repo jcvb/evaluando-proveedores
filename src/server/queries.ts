@@ -1,4 +1,13 @@
-import type { VerdictType } from "@prisma/client";
+import type { Prisma, VerdictType } from "@prisma/client";
+import {
+  SEARCH_PAGE_SIZE,
+  SEARCH_SIMILARITY_LIMIT,
+  decodeSearchCursor,
+  keysetCursorFromItem,
+  similarityCursorFromOffset,
+  type KeysetCursor,
+} from "@/lib/search-cursor";
+import { buildLocationWhere } from "@/lib/search-geo";
 import { prisma } from "@/lib/prisma";
 import { normalizeMxPhone } from "@/lib/phone";
 
@@ -10,6 +19,28 @@ export type SearchFilters = {
   colonia?: string;
   fraccionamiento?: string;
   veredicto?: VerdictType | "";
+  cursor?: string;
+};
+
+export type ProviderSearchItem = {
+  id: string;
+  businessName: string;
+  contactName: string | null;
+  phonePrimary: string;
+  primaryState: string;
+  primaryCity: string;
+  isClaimed: boolean;
+  totalReviews: number;
+  goodReviewsCount: number;
+  badReviewsCount: number;
+  averageScore: number;
+  categories: { name: string; slug: string }[];
+};
+
+export type ProviderSearchResult = {
+  items: ProviderSearchItem[];
+  nextCursor: string | null;
+  pageSize: number;
 };
 
 const providerCardSelect = {
@@ -31,9 +62,68 @@ export async function listCategories() {
   return prisma.serviceCategory.findMany({ orderBy: { name: "asc" } });
 }
 
-export async function searchProviders(filters: SearchFilters) {
+function buildSearchWhere(
+  filters: SearchFilters,
+  similarIds: string[] | null,
+  phone: string | null,
+  q: string,
+): Prisma.ProviderProfileWhereInput {
+  const verdict = filters.veredicto || undefined;
+  const locationClauses = buildLocationWhere({
+    estado: filters.estado,
+    municipio: filters.municipio,
+    colonia: filters.colonia,
+    fraccionamiento: filters.fraccionamiento,
+  });
+
+  return {
+    AND: [
+      q
+        ? {
+            OR: [
+              ...(phone ? [{ phonePrimary: phone }] : []),
+              ...(similarIds ? [{ id: { in: similarIds.length ? similarIds : ["__none__"] } }] : []),
+              { businessName: { contains: q, mode: "insensitive" as const } },
+              { contactName: { contains: q, mode: "insensitive" as const } },
+              ...(!phone && q.length >= 3
+                ? [{ categories: { some: { name: { contains: q.slice(0, Math.max(3, q.length - 2)), mode: "insensitive" as const } } } }]
+                : []),
+            ],
+          }
+        : {},
+      filters.oficio
+        ? {
+            OR: [
+              { categories: { some: { slug: filters.oficio } } },
+              { reviews: { some: { category: { slug: filters.oficio } } } },
+            ],
+          }
+        : {},
+      ...locationClauses,
+      verdict ? { reviews: { some: { verdict } } } : {},
+    ],
+  };
+}
+
+function keysetWhere(cursor: KeysetCursor): Prisma.ProviderProfileWhereInput {
+  return {
+    OR: [
+      { badReviewsCount: { lt: cursor.b } },
+      {
+        AND: [{ badReviewsCount: cursor.b }, { totalReviews: { lt: cursor.r } }],
+      },
+      {
+        AND: [{ badReviewsCount: cursor.b }, { totalReviews: cursor.r }, { id: { lt: cursor.id } }],
+      },
+    ],
+  };
+}
+
+export async function searchProviders(filters: SearchFilters): Promise<ProviderSearchResult> {
+  const pageSize = SEARCH_PAGE_SIZE;
   const q = filters.q?.trim() ?? "";
   const phone = q ? normalizeMxPhone(q) : null;
+  const cursorPayload = decodeSearchCursor(filters.cursor);
   let similarIds: string[] | null = null;
 
   if (q && !phone) {
@@ -47,7 +137,7 @@ export async function searchProviders(filters: SearchFilters) {
           similarity("businessName", ${q}),
           similarity(COALESCE("contactName", ''), ${q})
         ) DESC
-        LIMIT 40
+        LIMIT ${SEARCH_SIMILARITY_LIMIT}
       `;
       similarIds = rows.map((row) => row.id);
     } catch {
@@ -55,71 +145,48 @@ export async function searchProviders(filters: SearchFilters) {
     }
   }
 
-  const verdict = filters.veredicto || undefined;
-  const geoOnReviews = Boolean(filters.municipio || filters.colonia || filters.fraccionamiento || verdict);
+  const baseWhere = buildSearchWhere(filters, similarIds, phone, q);
 
-  const providers = await prisma.providerProfile.findMany({
-    where: {
-      AND: [
-        q
-          ? {
-              OR: [
-                ...(phone ? [{ phonePrimary: phone }] : []),
-                ...(similarIds ? [{ id: { in: similarIds.length ? similarIds : ["__none__"] } }] : []),
-                { businessName: { contains: q, mode: "insensitive" as const } },
-                { contactName: { contains: q, mode: "insensitive" as const } },
-                ...(!phone && q.length >= 3
-                  ? [{ categories: { some: { name: { contains: q.slice(0, Math.max(3, q.length - 2)), mode: "insensitive" as const } } } }]
-                  : []),
-              ],
-            }
-          : {},
-        filters.oficio
-          ? {
-              OR: [
-                { categories: { some: { slug: filters.oficio } } },
-                { reviews: { some: { category: { slug: filters.oficio } } } },
-              ],
-            }
-          : {},
-        filters.estado
-          ? {
-              OR: [
-                { primaryState: { equals: filters.estado, mode: "insensitive" as const } },
-                { reviews: { some: { state: { equals: filters.estado, mode: "insensitive" as const } } } },
-              ],
-            }
-          : {},
-        geoOnReviews
-          ? {
-              reviews: {
-                some: {
-                  ...(filters.municipio
-                    ? { cityOrMunicipality: { equals: filters.municipio, mode: "insensitive" as const } }
-                    : {}),
-                  ...(filters.colonia ? { colonia: { contains: filters.colonia, mode: "insensitive" as const } } : {}),
-                  ...(filters.fraccionamiento
-                    ? { fraccionamiento: { contains: filters.fraccionamiento, mode: "insensitive" as const } }
-                    : {}),
-                  ...(verdict ? { verdict } : {}),
-                  ...(filters.estado ? { state: { equals: filters.estado, mode: "insensitive" as const } } : {}),
-                  ...(filters.oficio ? { category: { slug: filters.oficio } } : {}),
-                },
-              },
-            }
-          : {},
-      ],
-    },
+  // Ranking por similitud: paginar la lista acotada en memoria.
+  if (similarIds) {
+    const start = cursorPayload?.t === "s" ? cursorPayload.i : 0;
+    const ranked = await prisma.providerProfile.findMany({
+      where: baseWhere,
+      select: providerCardSelect,
+    });
+    const order = new Map(similarIds.map((id, index) => [id, index]));
+    ranked.sort((a, b) => (order.get(a.id) ?? 9999) - (order.get(b.id) ?? 9999));
+    const slice = ranked.slice(start, start + pageSize + 1);
+    const hasMore = slice.length > pageSize;
+    const items = hasMore ? slice.slice(0, pageSize) : slice;
+    return {
+      items,
+      nextCursor: hasMore ? similarityCursorFromOffset(start + pageSize) : null,
+      pageSize,
+    };
+  }
+
+  const where: Prisma.ProviderProfileWhereInput =
+    cursorPayload?.t === "k"
+      ? { AND: [baseWhere, keysetWhere(cursorPayload)] }
+      : baseWhere;
+
+  const rows = await prisma.providerProfile.findMany({
+    where,
     select: providerCardSelect,
-    orderBy: [{ badReviewsCount: "desc" }, { totalReviews: "desc" }],
-    take: 24,
+    orderBy: [{ badReviewsCount: "desc" }, { totalReviews: "desc" }, { id: "desc" }],
+    take: pageSize + 1,
   });
 
-  if (similarIds) {
-    const order = new Map(similarIds.map((id, index) => [id, index]));
-    providers.sort((a, b) => (order.get(a.id) ?? 99) - (order.get(b.id) ?? 99));
-  }
-  return providers;
+  const hasMore = rows.length > pageSize;
+  const items = hasMore ? rows.slice(0, pageSize) : rows;
+  const last = items[items.length - 1];
+
+  return {
+    items,
+    nextCursor: hasMore && last ? keysetCursorFromItem(last) : null,
+    pageSize,
+  };
 }
 
 export async function lookupPostalCode(cp: string) {

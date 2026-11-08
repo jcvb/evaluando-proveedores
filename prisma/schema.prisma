@@ -101,6 +101,7 @@ model ProviderProfile {
   @@index([phonePrimary])
   @@index([businessName])
   @@index([primaryState, primaryCity])
+  @@index([badReviewsCount, totalReviews, id])
 }
 
 model Review {

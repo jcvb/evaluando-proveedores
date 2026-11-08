@@ -217,11 +217,27 @@ export default function AvisoPrivacidadPage() {
       <ul>
         <li>Mantener la sesión autenticada y preferencias básicas.</li>
         <li>Seguridad (prevención de abuso y fraude).</li>
-        <li>Medición agregada de audiencia o rendimiento, si se habilita.</li>
+        <li>
+          Medición agregada de audiencia y rendimiento mediante{" "}
+          <strong>Google Analytics 4</strong> (Google LLC), cuando esté habilitado. Google puede
+          tratar identificadores técnicos (p. ej. cookies o ID de dispositivo), páginas visitadas y
+          datos aproximados de ubicación/dispositivo conforme a su{" "}
+          <a
+            href="https://policies.google.com/privacy"
+            className="text-primary underline"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Política de privacidad
+          </a>
+          . Esta medición se usa para estadísticas de uso del Sitio (finalidad secundaria de la
+          sección 3.2).
+        </li>
       </ul>
       <p>
-        Puede configurar su navegador para rechazar cookies. Algunas funciones (p. ej. iniciar
-        sesión) podrían no operar correctamente sin ellas.
+        Puede configurar su navegador para rechazar cookies o usar herramientas de exclusión de
+        Google Analytics cuando estén disponibles. Algunas funciones (p. ej. iniciar sesión)
+        podrían no operar correctamente sin cookies esenciales.
       </p>
 
       <h2>10. Medidas de seguridad</h2>

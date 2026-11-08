@@ -139,6 +139,8 @@ async function main() {
           phoneSecondary: secondary ?? existing.phoneSecondary,
           googleFormattedAddress: data.googleFormattedAddress,
           categories: data.categories,
+          // Lista importada: 1 estrella por defecto si aún no hay opiniones reales
+          ...(existing.totalReviews === 0 ? { averageScore: 1 } : {}),
         },
       });
       updated += 1;
@@ -153,6 +155,7 @@ async function main() {
           primaryState: data.primaryState,
           primaryCity: data.primaryCity,
           googleFormattedAddress: data.googleFormattedAddress,
+          averageScore: 1,
           categories: categoryIds.length ? { connect: categoryIds.map((id) => ({ id })) } : undefined,
         },
       });

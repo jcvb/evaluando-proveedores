@@ -3,10 +3,11 @@ import Link from "next/link";
 import { Camera, Reply, SearchX, ShieldCheck, TriangleAlert } from "lucide-react";
 import { ProviderCard } from "@/components/provider-card";
 import { SearchForm } from "@/components/search-form";
+import { SearchPagination } from "@/components/search-pagination";
 import { SERVICE_CATEGORIES } from "@/lib/constants";
 import { databaseConfigured } from "@/lib/prisma";
 import { absoluteUrl, buildPageMetadata, SITE } from "@/lib/seo";
-import { listCategories, searchProviders, type SearchFilters } from "@/server/queries";
+import { listCategories, searchProviders, type ProviderSearchItem, type SearchFilters } from "@/server/queries";
 
 export const dynamic = "force-dynamic";
 
@@ -58,10 +59,13 @@ export default async function HomePage({ searchParams }: HomeProps) {
     colonia: params.colonia,
     fraccionamiento: params.fraccionamiento,
     veredicto: params.veredicto === "BUENO" || params.veredicto === "MALO" || params.veredicto === "REGULAR" ? params.veredicto : "",
+    cursor: params.cursor,
   };
 
   let categories: { slug: string; name: string }[] = SERVICE_CATEGORIES.map(({ slug, name }) => ({ slug, name }));
-  let providers: Awaited<ReturnType<typeof searchProviders>> = [];
+  let providers: ProviderSearchItem[] = [];
+  let nextCursor: string | null = null;
+  let pageSize = 24;
   let notice: string | null = null;
 
   if (!databaseConfigured()) {
@@ -70,7 +74,10 @@ export default async function HomePage({ searchParams }: HomeProps) {
     try {
       const stored = await listCategories();
       if (stored.length > 0) categories = stored;
-      providers = await searchProviders(filters);
+      const result = await searchProviders(filters);
+      providers = result.items;
+      nextCursor = result.nextCursor;
+      pageSize = result.pageSize;
     } catch (error) {
       console.error(error);
       notice = "No se pudo consultar la base de datos. Revisa que esté encendida.";
@@ -78,6 +85,7 @@ export default async function HomePage({ searchParams }: HomeProps) {
   }
 
   const hasFilters = hasActiveFilters(filters);
+  const formDefaults = { ...filters, cursor: undefined };
 
   return (
     <div className="mx-auto grid max-w-5xl gap-6 px-4 py-8">
@@ -108,7 +116,7 @@ export default async function HomePage({ searchParams }: HomeProps) {
           .
         </p>
       </section>
-      <SearchForm key={JSON.stringify(filters)} categories={categories} defaults={filters} />
+      <SearchForm key={JSON.stringify(formDefaults)} categories={categories} defaults={formDefaults} />
       {notice ? (
         <p className="flex items-start gap-2 rounded-xl bg-amber-100 px-4 py-3 text-amber-950">
           <TriangleAlert className="mt-0.5 size-5 shrink-0" aria-hidden />
@@ -122,13 +130,31 @@ export default async function HomePage({ searchParams }: HomeProps) {
             ? "No encontramos a nadie con esos datos. Revisa el nombre o el teléfono, o cuenta tú la primera experiencia."
             : "Todavía no hay opiniones. Si ya contrataste a alguien, puedes ser la primera persona en contarlo."}
         </p>
-      ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {providers.map((provider) => (
-            <ProviderCard key={provider.id} provider={provider} />
-          ))}
+      ) : providers.length > 0 ? (
+        <div className="grid gap-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {providers.map((provider) => (
+              <ProviderCard key={provider.id} provider={provider} />
+            ))}
+          </div>
+          <SearchPagination
+            pathname="/"
+            filters={{
+              q: filters.q,
+              oficio: filters.oficio,
+              estado: filters.estado,
+              municipio: filters.municipio,
+              colonia: filters.colonia,
+              fraccionamiento: filters.fraccionamiento,
+              veredicto: filters.veredicto || undefined,
+              cursor: filters.cursor,
+            }}
+            nextCursor={nextCursor}
+            pageSize={pageSize}
+            itemCount={providers.length}
+          />
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

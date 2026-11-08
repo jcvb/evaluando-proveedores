@@ -163,7 +163,18 @@ Con `NEXT_PUBLIC_SITE_URL` correcto quedan activos:
 - `/proveedores/{id}/md` y `/oficios/{slug}/md` — fichas limpias para IA
 - Open Graph + JSON-LD (Organization, WebSite, LocalBusiness, Review)
 
-Opcional en Vercel: `GOOGLE_SITE_VERIFICATION` y `BING_SITE_VERIFICATION`. Luego envía el sitemap en [Google Search Console](https://search.google.com/search-console).
+Opcional en Vercel:
+
+- `GOOGLE_SITE_VERIFICATION` y `BING_SITE_VERIFICATION` — verificación de propiedad.
+- `NEXT_PUBLIC_GA_MEASUREMENT_ID` — Google Analytics 4 (formato `G-XXXXXXXX`). Sin este valor no se carga el script.
+
+### Google Analytics 4
+
+1. En [Google Analytics](https://analytics.google.com/) crea una propiedad **GA4** para `burodeoficios.com`.
+2. En **Administrar → Flujos de datos → Web**, copia el **ID de medición** (`G-...`).
+3. En Vercel → Project → Settings → Environment Variables, agrega `NEXT_PUBLIC_GA_MEASUREMENT_ID` (Production) y redespliega.
+4. En Analytics → **Informes en tiempo real**, abre el sitio y confirma visitas.
+5. Envía el sitemap en [Google Search Console](https://search.google.com/search-console) (independiente de Analytics).
 
 ## Límites del plan free (importante)
 

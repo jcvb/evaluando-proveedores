@@ -85,9 +85,14 @@ export function AddressFields({
             return;
           }
           const current = valueRef.current;
-          const nextColonia = result.asentamientos.some((item) => item.nombre === current.colonia)
+          const keepCurrentColonia = result.asentamientos.some((item) => item.nombre === current.colonia);
+          // En búsqueda (colonia opcional) no forzar la primera colonia del CP:
+          // eso ocultaba proveedores de otras colonias del mismo municipio (p. ej. Xaltipa).
+          const nextColonia = keepCurrentColonia
             ? current.colonia
-            : (result.asentamientos[0]?.nombre ?? "");
+            : requireColonia
+              ? (result.asentamientos[0]?.nombre ?? "")
+              : "";
           setColonias(result.asentamientos);
           setFromCatalog(true);
           setStatus("ok");
@@ -112,7 +117,7 @@ export function AddressFields({
       cancelled = true;
       window.clearTimeout(handle);
     };
-  }, [value.postalCode]);
+  }, [value.postalCode, requireColonia]);
 
   useEffect(() => {
     const q = value.fraccionamiento.trim();

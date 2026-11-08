@@ -2,10 +2,12 @@ import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import { Atkinson_Hyperlegible } from "next/font/google";
 import { Toaster } from "sonner";
+import { GoogleAnalytics } from "@/components/google-analytics";
 import { JsonLd } from "@/components/json-ld";
 import { NavigationLoading } from "@/components/navigation-loading";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { gaMeasurementId } from "@/lib/analytics";
 import { SITE } from "@/lib/seo";
 import { getCurrentUser } from "@/server/auth";
 import "./globals.css";
@@ -90,6 +92,7 @@ export const dynamic = "force-dynamic";
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const user = await getCurrentUser();
+  const gaId = gaMeasurementId();
 
   const organizationLd = {
     "@context": "https://schema.org",
@@ -130,6 +133,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <main>{children}</main>
         <SiteFooter />
         <Toaster richColors position="top-center" />
+        {gaId ? <GoogleAnalytics measurementId={gaId} /> : null}
       </body>
     </html>
   );

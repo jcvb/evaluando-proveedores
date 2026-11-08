@@ -73,6 +73,13 @@ if (env.NEXT_PUBLIC_SUPABASE_URL && !env.NEXT_PUBLIC_SUPABASE_URL.includes("supa
   warnings.push("NEXT_PUBLIC_SUPABASE_URL no parece un proyecto de Supabase.");
 }
 
+const gaId = env.NEXT_PUBLIC_GA_MEASUREMENT_ID?.trim();
+if (!gaId) {
+  warnings.push("NEXT_PUBLIC_GA_MEASUREMENT_ID vacío: Google Analytics no se cargará en producción.");
+} else if (!/^G-[A-Z0-9]+$/i.test(gaId)) {
+  warnings.push(`NEXT_PUBLIC_GA_MEASUREMENT_ID ("${gaId}") no parece un ID GA4 (G-XXXXXXXX).`);
+}
+
 console.log("Revisión de .env.production para deploy free\n");
 
 if (missing.length) {

@@ -4,15 +4,19 @@ import { notFound } from "next/navigation";
 import { ChevronRight, SearchX, Wrench } from "lucide-react";
 import { JsonLd } from "@/components/json-ld";
 import { ProviderCard } from "@/components/provider-card";
+import { SearchPagination } from "@/components/search-pagination";
 import { SERVICE_CATEGORIES } from "@/lib/constants";
 import { databaseConfigured } from "@/lib/prisma";
 import { absoluteUrl, buildPageMetadata, SITE } from "@/lib/seo";
-import { getCategoryBySlug, searchProviders } from "@/server/queries";
+import { getCategoryBySlug, searchProviders, type ProviderSearchItem } from "@/server/queries";
 import { buttonVariants } from "@/components/ui/button";
 
 export const dynamic = "force-dynamic";
 
-type Props = { params: Promise<{ slug: string }> };
+type Props = {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<Record<string, string | undefined>>;
+};
 
 function fallbackCategory(slug: string) {
   return SERVICE_CATEGORIES.find((category) => category.slug === slug) ?? null;
@@ -41,8 +45,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   });
 }
 
-export default async function OficioPage({ params }: Props) {
+export default async function OficioPage({ params, searchParams }: Props) {
   const { slug } = await params;
+  const query = await searchParams;
   let category = fallbackCategory(slug) as { slug: string; name: string } | null;
 
   if (databaseConfigured()) {
@@ -56,10 +61,15 @@ export default async function OficioPage({ params }: Props) {
 
   if (!category) notFound();
 
-  let providers: Awaited<ReturnType<typeof searchProviders>> = [];
+  let providers: ProviderSearchItem[] = [];
+  let nextCursor: string | null = null;
+  let pageSize = 24;
   if (databaseConfigured()) {
     try {
-      providers = await searchProviders({ oficio: slug });
+      const result = await searchProviders({ oficio: slug, cursor: query.cursor });
+      providers = result.items;
+      nextCursor = result.nextCursor;
+      pageSize = result.pageSize;
     } catch (error) {
       console.error(error);
     }
@@ -134,10 +144,19 @@ export default async function OficioPage({ params }: Props) {
           </Link>
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {providers.map((provider) => (
-            <ProviderCard key={provider.id} provider={provider} />
-          ))}
+        <div className="grid gap-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {providers.map((provider) => (
+              <ProviderCard key={provider.id} provider={provider} />
+            ))}
+          </div>
+          <SearchPagination
+            pathname={`/oficios/${slug}`}
+            filters={{ cursor: query.cursor }}
+            nextCursor={nextCursor}
+            pageSize={pageSize}
+            itemCount={providers.length}
+          />
         </div>
       )}
     </div>

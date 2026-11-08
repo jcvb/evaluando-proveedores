@@ -22,10 +22,11 @@ export async function GET(_request: Request, context: { params: Promise<{ slug: 
     return new Response("# Oficio no encontrado\n", { status: 404, headers: { "Content-Type": "text/markdown; charset=utf-8" } });
   }
 
-  let providers: Awaited<ReturnType<typeof searchProviders>> = [];
+  let providers: Awaited<ReturnType<typeof searchProviders>>["items"] = [];
   if (databaseConfigured()) {
     try {
-      providers = await searchProviders({ oficio: slug });
+      const result = await searchProviders({ oficio: slug });
+      providers = result.items;
     } catch (error) {
       console.error(error);
     }
