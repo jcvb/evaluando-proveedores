@@ -39,10 +39,39 @@ En **Project Settings → API**:
 En **Authentication → Providers**:
 
 1. Activa **Email**.
-2. (Opcional) Activa **Google** y pega Client ID / Secret.
+2. Activa **Google** (pasos abajo) y pega Client ID / Secret.
 3. En **URL Configuration**, pon:
    - Site URL: `https://www.burodeoficios.com`
    - Redirect URLs: `https://www.burodeoficios.com/auth/callback` (y, si usas apex, también `https://burodeoficios.com/auth/callback`)
+
+#### Login con Google (OAuth)
+
+El botón ya existe en `/ingresar` y `/registro` cuando hay `NEXT_PUBLIC_SUPABASE_URL` + anon key. Para que funcione:
+
+1. En [Google Cloud Console](https://console.cloud.google.com/) crea un proyecto (o usa uno existente).
+2. **APIs y servicios → Pantalla de consentimiento de OAuth**:
+   - Tipo **Externo**
+   - Nombre de la app: `Buró de oficios`
+   - Correo de soporte: el tuyo
+   - Dominios autorizados: `burodeoficios.com` (y el de Supabase si te lo pide)
+   - Guarda y, en prueba, agrega tu Gmail como usuario de prueba (hasta publicar la app).
+3. **APIs y servicios → Credenciales → Crear credenciales → ID de cliente de OAuth**:
+   - Tipo: **Aplicación web**
+   - Orígenes autorizados de JavaScript:
+     - `https://www.burodeoficios.com`
+     - `https://burodeoficios.com` (si usas apex)
+     - `https://TU_REF.supabase.co`
+   - URI de redirección autorizados (el importante es el de Supabase):
+     - `https://TU_REF.supabase.co/auth/v1/callback`
+   - Copia **Client ID** y **Client Secret**.
+4. En Supabase → **Authentication → Providers → Google**:
+   - Enable Google
+   - Pega Client ID y Client Secret
+   - Save
+5. Confirma Site URL / Redirect URLs (paso 3 de Auth arriba) y redespliega Vercel si cambiaste env.
+6. Prueba en `https://www.burodeoficios.com/ingresar` → **Entrar con Google**.
+
+`TU_REF` es el id del proyecto Supabase (en tu caso algo como `frxcosbedsnhtcbrcxmn`).
 
 ### Storage (fotos de evidencia)
 
