@@ -29,10 +29,14 @@ const QUICK_TRADES = ["plomeria", "electricidad", "herreria", "carpinteria", "pi
 export function SearchForm({
   categories,
   defaults,
+  tone = "default",
 }: {
   categories: { slug: string; name: string }[];
   defaults: Defaults;
+  /** `onDark`: contraste sobre el semi-hero verde. */
+  tone?: "default" | "onDark";
 }) {
+  const onDark = tone === "onDark";
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [q, setQ] = useState(defaults.q ?? "");
@@ -117,7 +121,12 @@ export function SearchForm({
       }}
     >
       <fieldset disabled={pending} className="contents">
-      <div className="flex items-center gap-2 rounded-2xl bg-card p-1.5 shadow-sm ring-1 ring-foreground/15 focus-within:ring-2 focus-within:ring-primary">
+      <div
+        className={cn(
+          "flex items-center gap-2 rounded-2xl bg-card p-1.5 shadow-sm ring-1 focus-within:ring-2 focus-within:ring-primary",
+          onDark ? "ring-white/25 shadow-lg shadow-black/20" : "ring-foreground/15",
+        )}
+      >
         <Search className="ml-2 size-5 shrink-0 text-muted-foreground" aria-hidden />
         <label htmlFor="q" className="sr-only">
           Buscar
@@ -128,7 +137,7 @@ export function SearchForm({
           value={q}
           onChange={(event) => setQ(event.target.value)}
           placeholder="Busca por nombre, teléfono u oficio"
-          className="h-10 min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-muted-foreground disabled:opacity-60"
+          className="h-10 min-w-0 flex-1 bg-transparent text-base text-foreground outline-none placeholder:text-muted-foreground disabled:opacity-60"
           autoComplete="off"
         />
         <Button type="submit" size="lg" className="shrink-0 px-5" disabled={pending}>
@@ -145,6 +154,7 @@ export function SearchForm({
           aria-controls="search-filters"
           disabled={pending}
           onClick={() => setOpen((current) => !current)}
+          className={onDark && !open ? "border-white/35 bg-white/10 text-white hover:bg-white/18 hover:text-white" : undefined}
         >
           <SlidersHorizontal aria-hidden />
           Filtros
@@ -160,7 +170,12 @@ export function SearchForm({
             key={filter.key}
             type="button"
             onClick={() => removeFilter(filter.key)}
-            className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-sm text-primary hover:bg-primary/20"
+            className={cn(
+              "inline-flex items-center gap-1 rounded-full px-3 py-1 text-sm",
+              onDark
+                ? "bg-white/15 text-white hover:bg-white/25"
+                : "bg-primary/10 text-primary hover:bg-primary/20",
+            )}
             aria-label={`Quitar filtro ${filter.label}`}
           >
             {filter.label}
@@ -169,20 +184,34 @@ export function SearchForm({
         ))}
 
         {active.length > 1 ? (
-          <button type="button" onClick={clearFilters} className="text-sm text-muted-foreground underline-offset-2 hover:underline">
+          <button
+            type="button"
+            onClick={clearFilters}
+            className={cn(
+              "text-sm underline-offset-2 hover:underline",
+              onDark ? "text-white/70" : "text-muted-foreground",
+            )}
+          >
             Quitar todos
           </button>
         ) : null}
 
         {active.length === 0 && quickTrades.length > 0 ? (
           <>
-            <span className="text-sm text-muted-foreground">o elige un oficio:</span>
+            <span className={cn("text-sm", onDark ? "text-white/65" : "text-muted-foreground")}>
+              o elige un oficio:
+            </span>
             {quickTrades.map((category) => (
               <button
                 key={category.slug}
                 type="button"
                 onClick={() => go({ q, oficio: category.slug })}
-                className="rounded-full border border-border bg-card px-3 py-1 text-sm hover:bg-muted"
+                className={cn(
+                  "rounded-full border px-3 py-1 text-sm",
+                  onDark
+                    ? "border-white/30 bg-white/10 text-white hover:bg-white/20"
+                    : "border-border bg-card hover:bg-muted",
+                )}
               >
                 {category.name}
               </button>

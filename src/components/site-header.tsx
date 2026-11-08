@@ -8,7 +8,14 @@ import { logoutAction } from "@/server/actions/auth";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-const menuItem = "flex items-center gap-2.5 rounded-md px-3 py-2 text-[0.95rem] hover:bg-muted [&_svg]:size-4 [&_svg]:text-muted-foreground";
+const menuItem =
+  "flex items-center gap-2.5 rounded-md px-3 py-2 text-[0.95rem] hover:bg-muted [&_svg]:size-4 [&_svg]:text-muted-foreground";
+
+const navBtn = (variant: "default" | "outline" = "outline") =>
+  cn(
+    buttonVariants({ variant, size: "sm" }),
+    "sm:h-9 sm:gap-2 sm:px-3.5 sm:text-[0.95rem] sm:[&_svg:not([class*='size-'])]:size-5",
+  );
 
 export function SiteHeader({
   user,
@@ -40,29 +47,31 @@ export function SiteHeader({
   }, [open]);
 
   return (
-    <header className="border-b border-border bg-background">
-      <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-3">
-        <Link href="/" className="flex min-w-0 items-center gap-2.5" aria-label="Buró de oficios — inicio">
+    <header className="overflow-x-clip border-b border-border bg-background">
+      <div className="mx-auto flex w-full min-w-0 max-w-5xl items-center justify-between gap-2 px-4 py-2.5 sm:gap-3 sm:py-3">
+        <Link href="/" className="flex min-w-0 shrink items-center gap-2.5" aria-label="Buró de oficios — inicio">
           <Image
             src="/brand/logo-header.png"
             alt="Buró de oficios"
             width={220}
             height={63}
-            className="h-10 w-auto sm:h-11"
+            className="h-9 w-auto max-w-[min(100%,8.75rem)] sm:h-11 sm:max-w-none"
             priority
           />
-          <span className="hidden text-sm text-muted-foreground sm:block">
+          <span className="hidden text-sm text-muted-foreground md:block">
             Opiniones con fotos, antes de contratar
           </span>
         </Link>
-        <nav className="flex items-center gap-2">
-          <Link href="/oficios" className={buttonVariants({ variant: "outline" })}>
+
+        <nav className="flex shrink-0 items-center gap-1 sm:gap-2" aria-label="Principal">
+          <Link href="/oficios" className={navBtn("outline")} aria-label="Oficios">
             <Hammer aria-hidden />
-            Oficios
+            <span className="hidden sm:inline">Oficios</span>
           </Link>
-          <Link href="/resenas/nueva" className={buttonVariants()}>
+          <Link href="/resenas/nueva" className={navBtn("default")} aria-label="Contar mi experiencia">
             <PenLine aria-hidden />
-            Contar mi experiencia
+            <span className="sm:hidden">Opinar</span>
+            <span className="hidden sm:inline">Contar mi experiencia</span>
           </Link>
           {user ? (
             <div className="relative" ref={menuRef}>
@@ -70,17 +79,21 @@ export function SiteHeader({
                 type="button"
                 aria-expanded={open}
                 aria-haspopup="menu"
-                className={buttonVariants({ variant: "outline" })}
+                aria-label={user.role === "ADMIN" ? "Menú de administrador" : "Menú de mi cuenta"}
+                className={navBtn("outline")}
                 onClick={() => setOpen((current) => !current)}
               >
                 <UserRound aria-hidden />
-                {user.role === "ADMIN" ? "Admin" : "Mi cuenta"}
-                <ChevronDown className={cn("transition-transform", open && "rotate-180")} aria-hidden />
+                <span className="hidden sm:inline">{user.role === "ADMIN" ? "Admin" : "Mi cuenta"}</span>
+                <ChevronDown
+                  className={cn("hidden transition-transform sm:inline", open && "rotate-180")}
+                  aria-hidden
+                />
               </button>
               {open ? (
                 <div
                   role="menu"
-                  className="absolute right-0 z-50 mt-2 grid w-56 gap-0.5 rounded-xl border border-border bg-card p-1.5 shadow-lg"
+                  className="absolute right-0 z-50 mt-2 grid w-[min(14rem,calc(100vw-2rem))] gap-0.5 rounded-xl border border-border bg-card p-1.5 shadow-lg"
                 >
                   <div className="px-3 py-1.5">
                     <p className="truncate text-sm font-medium">{user.name}</p>
@@ -121,9 +134,9 @@ export function SiteHeader({
               ) : null}
             </div>
           ) : (
-            <Link href="/ingresar" className={buttonVariants({ variant: "outline" })}>
+            <Link href="/ingresar" className={navBtn("outline")} aria-label="Entrar">
               <LogIn aria-hidden />
-              Entrar
+              <span className="hidden sm:inline">Entrar</span>
             </Link>
           )}
         </nav>

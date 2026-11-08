@@ -88,73 +88,104 @@ export default async function HomePage({ searchParams }: HomeProps) {
   const formDefaults = { ...filters, cursor: undefined };
 
   return (
-    <div className="mx-auto grid max-w-5xl gap-6 px-4 py-8">
-      <section className="grid gap-2">
-        <h1 className="font-heading text-2xl md:text-3xl">Busca un maestro antes de contratarlo</h1>
-        <p className="max-w-2xl text-muted-foreground">
-          Aquí otras personas cuentan cómo les fue, con fotos. El negocio puede responder. No puede borrar lo que escribieron.
-        </p>
-        <ul className="mt-1 flex flex-wrap gap-x-5 gap-y-1.5 text-sm [&_li]:flex [&_li]:items-center [&_li]:gap-1.5 [&_svg]:size-4 [&_svg]:text-primary">
-          <li>
-            <Camera aria-hidden />
-            Opiniones con fotos
-          </li>
-          <li>
-            <Reply aria-hidden />
-            El negocio puede responder
-          </li>
-          <li>
-            <ShieldCheck aria-hidden />
-            Nadie borra lo escrito
-          </li>
-        </ul>
-        <p className="text-sm">
-          También puedes{" "}
-          <Link href="/oficios" className="font-medium text-primary underline">
-            explorar por oficio
-          </Link>
-          .
-        </p>
-      </section>
-      <SearchForm key={JSON.stringify(formDefaults)} categories={categories} defaults={formDefaults} />
-      {notice ? (
-        <p className="flex items-start gap-2 rounded-xl bg-amber-100 px-4 py-3 text-amber-950">
-          <TriangleAlert className="mt-0.5 size-5 shrink-0" aria-hidden />
-          {notice}
-        </p>
-      ) : null}
-      {providers.length === 0 && !notice ? (
-        <p className="flex items-start gap-2 rounded-xl bg-muted px-4 py-3">
-          <SearchX className="mt-0.5 size-5 shrink-0 text-muted-foreground" aria-hidden />
-          {hasFilters
-            ? "No encontramos a nadie con esos datos. Revisa el nombre o el teléfono, o cuenta tú la primera experiencia."
-            : "Todavía no hay opiniones. Si ya contrataste a alguien, puedes ser la primera persona en contarlo."}
-        </p>
-      ) : providers.length > 0 ? (
-        <div className="grid gap-4">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {providers.map((provider) => (
-              <ProviderCard key={provider.id} provider={provider} />
-            ))}
+    <div>
+      <section className="relative overflow-hidden border-b border-[#1a4a36] bg-[linear-gradient(155deg,#1f5c45_0%,#163a2d_52%,#0f2a20_100%)] text-white">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,255,255,0.14),transparent_55%),radial-gradient(ellipse_at_bottom_left,rgba(180,220,160,0.12),transparent_50%)]"
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -right-16 top-8 size-56 rounded-full bg-white/5 blur-2xl md:size-72"
+        />
+
+        <div className="relative mx-auto grid max-w-5xl gap-7 px-4 py-10 md:gap-8 md:py-14">
+          <div className="grid max-w-2xl gap-3 home-hero-reveal">
+            <p className="text-sm font-semibold tracking-[0.08em] text-[#c8e6d4] uppercase">
+              {SITE.name}
+            </p>
+            <h1 className="font-heading text-[1.85rem] leading-tight text-balance sm:text-3xl md:text-4xl">
+              Consulta opiniones reales antes de contratar
+            </h1>
+            <p className="max-w-xl text-[1.05rem] leading-relaxed text-white/80 text-pretty">
+              Personas como tú cuentan cómo les fue con plomeros, electricistas, carpinteros y más
+              oficios — con fotos. El negocio puede responder; nadie borra lo escrito.
+            </p>
           </div>
-          <SearchPagination
-            pathname="/"
-            filters={{
-              q: filters.q,
-              oficio: filters.oficio,
-              estado: filters.estado,
-              municipio: filters.municipio,
-              colonia: filters.colonia,
-              fraccionamiento: filters.fraccionamiento,
-              veredicto: filters.veredicto || undefined,
-              cursor: filters.cursor,
-            }}
-            nextCursor={nextCursor}
-            pageSize={pageSize}
-            itemCount={providers.length}
-          />
+
+          <ul className="flex flex-wrap gap-x-5 gap-y-2 text-[0.95rem] text-white/85 home-hero-reveal-delay [&_li]:flex [&_li]:items-center [&_li]:gap-1.5 [&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:text-[#b7dfc6]">
+            <li>
+              <Camera aria-hidden />
+              Opiniones con fotos
+            </li>
+            <li>
+              <Reply aria-hidden />
+              El negocio puede responder
+            </li>
+            <li>
+              <ShieldCheck aria-hidden />
+              Nadie borra lo escrito
+            </li>
+          </ul>
+
+          <div className="grid gap-3 home-hero-reveal-delay-2">
+            <SearchForm
+              key={JSON.stringify(formDefaults)}
+              categories={categories}
+              defaults={formDefaults}
+              tone="onDark"
+            />
+            <p className="text-sm text-white/65">
+              También puedes{" "}
+              <Link href="/oficios" className="font-medium text-white underline decoration-white/40 underline-offset-2 hover:decoration-white">
+                explorar por oficio
+              </Link>
+              .
+            </p>
+          </div>
         </div>
-      ) : null}
+      </section>
+
+      <div className="mx-auto grid max-w-5xl gap-6 px-4 py-8">
+        {notice ? (
+          <p className="flex items-start gap-2 rounded-xl bg-amber-100 px-4 py-3 text-amber-950">
+            <TriangleAlert className="mt-0.5 size-5 shrink-0" aria-hidden />
+            {notice}
+          </p>
+        ) : null}
+        {providers.length === 0 && !notice ? (
+          <p className="flex items-start gap-2 rounded-xl bg-muted px-4 py-3">
+            <SearchX className="mt-0.5 size-5 shrink-0 text-muted-foreground" aria-hidden />
+            {hasFilters
+              ? "No encontramos a nadie con esos datos. Revisa el nombre o el teléfono, o cuenta tú la primera experiencia."
+              : "Todavía no hay opiniones. Si ya contrataste a alguien, puedes ser la primera persona en contarlo."}
+          </p>
+        ) : providers.length > 0 ? (
+          <div className="grid gap-4">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {providers.map((provider) => (
+                <ProviderCard key={provider.id} provider={provider} />
+              ))}
+            </div>
+            <SearchPagination
+              pathname="/"
+              filters={{
+                q: filters.q,
+                oficio: filters.oficio,
+                estado: filters.estado,
+                municipio: filters.municipio,
+                colonia: filters.colonia,
+                fraccionamiento: filters.fraccionamiento,
+                veredicto: filters.veredicto || undefined,
+                cursor: filters.cursor,
+              }}
+              nextCursor={nextCursor}
+              pageSize={pageSize}
+              itemCount={providers.length}
+            />
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }
