@@ -18,7 +18,10 @@ export function isAdminEmail(email: string) {
 }
 
 export function siteOrigin() {
-  return process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const fromEnv = process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/$/, "");
+  if (fromEnv) return fromEnv;
+  if (process.env.NODE_ENV === "production") return "https://www.burodeoficios.com";
+  return "http://localhost:3000";
 }
 
 export function googleMapsConfigured() {

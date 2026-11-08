@@ -59,7 +59,10 @@ if (env.DATABASE_URL && !/[?&]pgbouncer=true/.test(env.DATABASE_URL) && /pooler\
 }
 
 if (env.NEXT_PUBLIC_SITE_URL?.includes("localhost")) {
-  warnings.push("NEXT_PUBLIC_SITE_URL sigue en localhost. Pon la URL de Vercel (https://….vercel.app).");
+  warnings.push("NEXT_PUBLIC_SITE_URL sigue en localhost. Pon https://www.burodeoficios.com");
+}
+if (env.NEXT_PUBLIC_SITE_URL && !env.NEXT_PUBLIC_SITE_URL.includes("burodeoficios.com")) {
+  warnings.push("NEXT_PUBLIC_SITE_URL no apunta a www.burodeoficios.com");
 }
 
 if (env.SESSION_SECRET === "cambia-esta-cadena" || (env.SESSION_SECRET && env.SESSION_SECRET.length < 16)) {

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalPage } from "@/components/legal-page";
-import { absoluteUrl, buildPageMetadata, SITE } from "@/lib/seo";
+import { buildPageMetadata, SITE } from "@/lib/seo";
 
 export const metadata: Metadata = buildPageMetadata({
   title: "Términos y condiciones",
@@ -16,9 +16,9 @@ export default function TerminosPage() {
     <LegalPage title="Términos y condiciones de uso" updatedAt={UPDATED}>
       <p>
         Estos Términos y condiciones (los “Términos”) regulan el acceso y uso del sitio web{" "}
-        <Link href="/" className="text-primary underline">
-          {absoluteUrl("/")}
-        </Link>{" "}
+        <a href={SITE.canonicalOrigin} className="text-primary underline">
+          {SITE.canonicalOrigin}/
+        </a>{" "}
         y de los servicios asociados de <strong>{SITE.name}</strong> (el “Sitio” o la “Plataforma”),
         orientado a la publicación y consulta de opiniones sobre maestros de oficio, talleres y negocios
         afines en los Estados Unidos Mexicanos.

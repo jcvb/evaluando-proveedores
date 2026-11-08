@@ -41,8 +41,8 @@ En **Authentication → Providers**:
 1. Activa **Email**.
 2. (Opcional) Activa **Google** y pega Client ID / Secret.
 3. En **URL Configuration**, pon:
-   - Site URL: `https://TU-PROYECTO.vercel.app`
-   - Redirect URLs: `https://TU-PROYECTO.vercel.app/auth/callback`
+   - Site URL: `https://www.burodeoficios.com`
+   - Redirect URLs: `https://www.burodeoficios.com/auth/callback` (y, si usas apex, también `https://burodeoficios.com/auth/callback`)
 
 ### Storage (fotos de evidencia)
 
@@ -92,13 +92,28 @@ npm run check:deploy
 | `NEXT_PUBLIC_SUPABASE_URL` | Project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | anon key |
 | `SUPABASE_SERVICE_ROLE_KEY` | service_role |
-| `NEXT_PUBLIC_SITE_URL` | `https://TU-PROYECTO.vercel.app` |
-| `ADMIN_EMAILS` | tu correo (admin) |
+| `NEXT_PUBLIC_SITE_URL` | `https://www.burodeoficios.com` |
+| `LEGAL_CONTACT_EMAIL` | `privacidad@burodeoficios.com` |
+| `ADMIN_EMAILS` | tu correo personal (admin) |
 | `SESSION_SECRET` | cadena larga aleatoria |
 | `GOOGLE_MAPS_API_KEY` | opcional |
 
 5. Deploy.
-6. Cuando Vercel te dé la URL final, actualiza `NEXT_PUBLIC_SITE_URL` y las redirect URLs de Supabase Auth, y vuelve a desplegar.
+6. Dominio en Vercel: agrega `www.burodeoficios.com` (y el apex `burodeoficios.com` redirigiendo a `www`). Actualiza también las redirect URLs de Supabase Auth.
+
+## 3.1 Correo del dominio (redirección)
+
+Vercel **no** ofrece buzones de correo. El DNS del dominio puede seguir en Vercel; solo agregas registros **MX** (y a veces TXT) para un servicio de reenvío:
+
+1. Crea una cuenta gratis en [ImprovMX](https://improvmx.com/) o [Forward Email](https://forwardemail.net/).
+2. Dominio: `burodeoficios.com`.
+3. Alias: `privacidad@burodeoficios.com` → tu Gmail (u otro correo real).
+4. Opcional: `hola@`, `contacto@`, `admin@` al mismo destino.
+5. En **Vercel → Project → Settings → Domains → DNS** (o el DNS del registrador, si no usas el de Vercel), pega los MX / TXT que te indique el servicio.
+6. No borres los registros A/CNAME de Vercel del sitio web; solo añade MX/TXT de correo.
+7. Prueba enviando un mail a `privacidad@burodeoficios.com` y confirma que llega a tu bandeja.
+
+Si más adelante quieres buzón completo (enviar desde `@burodeoficios.com`), usa Google Workspace o Microsoft 365 (de pago).
 
 ## 4. Prueba rápida en producción
 

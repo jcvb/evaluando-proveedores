@@ -10,8 +10,10 @@ export const SITE = {
   locale: "es_MX",
   language: "es-MX",
   country: "MX",
+  /** Dominio canónico público (sin barra final). */
+  canonicalOrigin: "https://www.burodeoficios.com",
   /** Correo de contacto legal / ARCO. Sobrescribible con LEGAL_CONTACT_EMAIL. */
-  legalEmail: process.env.LEGAL_CONTACT_EMAIL?.trim() || process.env.ADMIN_EMAILS?.split(",")[0]?.trim() || "privacidad@burodeoficios.mx",
+  legalEmail: process.env.LEGAL_CONTACT_EMAIL?.trim() || "privacidad@burodeoficios.com",
   keywords: [
     "opiniones oficios México",
     "reseñas plomeros",

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalPage } from "@/components/legal-page";
-import { absoluteUrl, buildPageMetadata, SITE } from "@/lib/seo";
+import { buildPageMetadata, SITE } from "@/lib/seo";
 
 export const metadata: Metadata = buildPageMetadata({
   title: "Aviso de privacidad",
@@ -23,9 +23,9 @@ export default function AvisoPrivacidadPage() {
       </p>
       <p className="rounded-xl bg-muted px-4 py-3 text-sm">
         Este aviso aplica al sitio{" "}
-        <Link href="/" className="text-primary underline">
-          {absoluteUrl("/")}
-        </Link>{" "}
+        <a href={SITE.canonicalOrigin} className="text-primary underline">
+          {SITE.canonicalOrigin}/
+        </a>{" "}
         y a los servicios digitales asociados (cuentas, opiniones, reclamo de fichas, respuestas del
         negocio y moderación). Complementa los{" "}
         <Link href="/terminos" className="text-primary underline">
@@ -43,7 +43,10 @@ export default function AvisoPrivacidadPage() {
           {SITE.legalEmail}
         </a>
         <br />
-        <strong>Sitio web:</strong> {absoluteUrl("/")}
+        <strong>Sitio web:</strong>{" "}
+        <a href={SITE.canonicalOrigin} className="text-primary underline">
+          {SITE.canonicalOrigin}/
+        </a>
       </p>
       <p>
         Si el Responsable cuenta con domicilio físico distinto para notificaciones formales, podrá
