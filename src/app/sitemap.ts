@@ -1,52 +1,59 @@
 import type { MetadataRoute } from "next";
 import { SERVICE_CATEGORIES } from "@/lib/constants";
 import { databaseConfigured } from "@/lib/prisma";
-import { absoluteUrl } from "@/lib/seo";
+import { SITE } from "@/lib/seo";
 import { listProvidersForSitemap } from "@/server/queries";
 
 export const dynamic = "force-dynamic";
+
+/** Origen fijo y válido para Google Search Console (evita typos de env tipo ttps://). */
+function sitemapUrl(path = "/") {
+  const base = SITE.canonicalOrigin.replace(/\/$/, "");
+  if (!path || path === "/") return `${base}/`;
+  return `${base}${path.startsWith("/") ? path : `/${path}`}`;
+}
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
   const entries: MetadataRoute.Sitemap = [
     {
-      url: absoluteUrl("/"),
+      url: sitemapUrl("/"),
       lastModified: now,
       changeFrequency: "hourly",
       priority: 1,
     },
     {
-      url: absoluteUrl("/oficios"),
+      url: sitemapUrl("/oficios"),
       lastModified: now,
       changeFrequency: "weekly",
       priority: 0.9,
     },
     {
-      url: absoluteUrl("/terminos"),
+      url: sitemapUrl("/terminos"),
       lastModified: now,
       changeFrequency: "yearly",
       priority: 0.4,
     },
     {
-      url: absoluteUrl("/aviso-privacidad"),
+      url: sitemapUrl("/aviso-privacidad"),
       lastModified: now,
       changeFrequency: "yearly",
       priority: 0.4,
     },
     {
-      url: absoluteUrl("/llms.txt"),
+      url: sitemapUrl("/llms.txt"),
       lastModified: now,
       changeFrequency: "daily",
       priority: 0.3,
     },
     {
-      url: absoluteUrl("/feed.xml"),
+      url: sitemapUrl("/feed.xml"),
       lastModified: now,
       changeFrequency: "hourly",
       priority: 0.3,
     },
     {
-      url: absoluteUrl("/contexto.md"),
+      url: sitemapUrl("/contexto.md"),
       lastModified: now,
       changeFrequency: "monthly",
       priority: 0.2,
@@ -55,7 +62,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   for (const category of SERVICE_CATEGORIES) {
     entries.push({
-      url: absoluteUrl(`/oficios/${category.slug}`),
+      url: sitemapUrl(`/oficios/${category.slug}`),
       lastModified: now,
       changeFrequency: "daily",
       priority: 0.8,
@@ -67,7 +74,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       const providers = await listProvidersForSitemap();
       for (const provider of providers) {
         entries.push({
-          url: absoluteUrl(`/proveedores/${provider.id}`),
+          url: sitemapUrl(`/proveedores/${provider.id}`),
           lastModified: provider.updatedAt,
           changeFrequency: "daily",
           priority: 0.85,

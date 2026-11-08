@@ -1,9 +1,9 @@
 import type { MetadataRoute } from "next";
-import { absoluteUrl } from "@/lib/seo";
+import { SITE } from "@/lib/seo";
 
 /** Permite indexación web y crawlers de búsqueda / agentes de IA. */
 export default function robots(): MetadataRoute.Robots {
-  const sitemap = absoluteUrl("/sitemap.xml");
+  const origin = SITE.canonicalOrigin.replace(/\/$/, "");
 
   return {
     rules: [
@@ -53,7 +53,7 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ["/admin/", "/cuenta", "/mis-resenas", "/ingresar", "/registro", "/auth/"],
       },
     ],
-    sitemap,
-    host: absoluteUrl("/"),
+    sitemap: `${origin}/sitemap.xml`,
+    host: origin,
   };
 }

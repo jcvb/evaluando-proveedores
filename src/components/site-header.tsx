@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { ChevronDown, ClipboardList, Hammer, LogIn, LogOut, PenLine, ShieldCheck, Store, UserRound } from "lucide-react";
 import { logoutAction } from "@/server/actions/auth";
@@ -41,13 +42,17 @@ export function SiteHeader({
   return (
     <header className="border-b border-border bg-background">
       <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-3">
-        <Link href="/" className="flex min-w-0 items-center gap-2.5">
-          <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-            <Hammer className="size-5" aria-hidden />
-          </span>
-          <span>
-            <span className="font-heading text-xl leading-none text-primary">Buró de oficios</span>
-            <span className="block text-sm text-muted-foreground">Opiniones con fotos, antes de contratar</span>
+        <Link href="/" className="flex min-w-0 items-center gap-2.5" aria-label="Buró de oficios — inicio">
+          <Image
+            src="/brand/logo-header.png"
+            alt="Buró de oficios"
+            width={220}
+            height={63}
+            className="h-10 w-auto sm:h-11"
+            priority
+          />
+          <span className="hidden text-sm text-muted-foreground sm:block">
+            Opiniones con fotos, antes de contratar
           </span>
         </Link>
         <nav className="flex items-center gap-2">

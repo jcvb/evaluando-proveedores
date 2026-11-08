@@ -6,7 +6,7 @@ import { Toaster } from "sonner";
 import { JsonLd } from "@/components/json-ld";
 import { NavigationLoading } from "@/components/navigation-loading";
 import { SiteHeader } from "@/components/site-header";
-import { absoluteUrl, SITE } from "@/lib/seo";
+import { SITE } from "@/lib/seo";
 import { getCurrentUser } from "@/server/auth";
 import "./globals.css";
 
@@ -16,15 +16,17 @@ const atkinson = Atkinson_Hyperlegible({
   variable: "--font-source",
 });
 
+const siteUrl = SITE.canonicalOrigin.replace(/\/$/, "");
+
 export const metadata: Metadata = {
-  metadataBase: new URL(absoluteUrl("/")),
+  metadataBase: new URL(siteUrl),
   title: {
     default: SITE.name,
     template: `%s | ${SITE.name}`,
   },
   description: SITE.description,
   applicationName: SITE.name,
-  authors: [{ name: SITE.name, url: absoluteUrl("/") }],
+  authors: [{ name: SITE.name, url: siteUrl }],
   creator: SITE.name,
   publisher: SITE.name,
   keywords: [...SITE.keywords],
@@ -33,17 +35,17 @@ export const metadata: Metadata = {
   referrer: "origin-when-cross-origin",
   formatDetection: { telephone: false, email: false, address: false },
   alternates: {
-    canonical: absoluteUrl("/"),
-    languages: { "es-MX": absoluteUrl("/"), es: absoluteUrl("/") },
+    canonical: "/",
+    languages: { "es-MX": "/", es: "/" },
     types: {
-      "application/rss+xml": absoluteUrl("/feed.xml"),
-      "text/plain": absoluteUrl("/llms.txt"),
+      "application/rss+xml": "/feed.xml",
+      "text/plain": "/llms.txt",
     },
   },
   openGraph: {
     type: "website",
     locale: SITE.locale,
-    url: absoluteUrl("/"),
+    url: siteUrl,
     siteName: SITE.name,
     title: SITE.name,
     description: SITE.description,
@@ -74,7 +76,7 @@ export const metadata: Metadata = {
   },
   other: {
     "ai-content": "human-authored reviews with photos about Mexican trade providers",
-    "llms-txt": absoluteUrl("/llms.txt"),
+    "llms-txt": `${siteUrl}/llms.txt`,
   },
 };
 
@@ -93,7 +95,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
     "@context": "https://schema.org",
     "@type": "Organization",
     name: SITE.name,
-    url: absoluteUrl("/"),
+    url: siteUrl,
     description: SITE.description,
     areaServed: { "@type": "Country", name: "México" },
     knowsAbout: ["oficios", "reseñas", "maestros", "talleres", "México"],
@@ -104,14 +106,14 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
     "@context": "https://schema.org",
     "@type": "WebSite",
     name: SITE.name,
-    url: absoluteUrl("/"),
+    url: siteUrl,
     description: SITE.description,
     inLanguage: SITE.language,
     potentialAction: {
       "@type": "SearchAction",
       target: {
         "@type": "EntryPoint",
-        urlTemplate: `${absoluteUrl("/")}?q={search_term_string}`,
+        urlTemplate: `${siteUrl}/?q={search_term_string}`,
       },
       "query-input": "required name=search_term_string",
     },

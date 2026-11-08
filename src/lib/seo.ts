@@ -28,9 +28,15 @@ export const SITE = {
 } as const;
 
 export function absoluteUrl(path = "/") {
-  const base = siteOrigin().replace(/\/$/, "");
-  if (!path || path === "/") return base;
-  return `${base}${path.startsWith("/") ? path : `/${path}`}`;
+  const base = (siteOrigin() || SITE.canonicalOrigin).replace(/\/$/, "");
+  // Defensa extra por si el origen llegó malformado desde el entorno
+  const safeBase = base.startsWith("ttps://")
+    ? `h${base}`
+    : base.startsWith("http://") || base.startsWith("https://")
+      ? base
+      : SITE.canonicalOrigin;
+  if (!path || path === "/") return safeBase;
+  return `${safeBase}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
 export function truncateMeta(text: string, max = 155) {
